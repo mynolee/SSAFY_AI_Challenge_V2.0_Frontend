@@ -9,10 +9,11 @@
 | 지역 선택 홈 | `index.html` | `js/main.js` | 전국 17개 시도 지도, 시·군 선택, 선택 상태 저장·복원 |
 | 지도 탐색 | `map.html` | `js/map.js` | 지도 탐색 화면 틀 |
 | 여행 플래너 | `travel.html` | `js/travel.js` | 여행 플래너 화면 틀 |
-| 커뮤니티 | `community.html` | `js/community.js` | 커뮤니티 화면 틀 |
+| 커뮤니티 | `community.html` | `js/community.js` | 카테고리 필터, 게시글 작성·상세·수정·삭제 (작성자만 수정·삭제) |
 | 로그인 | `login.html` | `js/login.js` | 회원가입 창, 로컬 회원 저장, 로그인, 데모 계정 |
+| 마이페이지 | `mypage.html` | `js/mypage.js` | 관심 장소·등록 장소·저장 여행·내가 쓴 글 목록, 계정 정보, 로그아웃, 회원 탈퇴 |
 
-각 페이지는 자기 JS 파일만 불러옵니다. 담당자는 해당 HTML에서 화면 구조를, 해당 JS에서 이벤트와 기능을 수정하면 됩니다. 메뉴는 일반 링크로 각 HTML 페이지에 이동합니다. 헤더는 각 HTML에 포함되어 있으며, 현재 메뉴의 `active` 클래스와 `aria-current="page"`도 HTML에서 지정합니다.
+모든 페이지는 공통 `js/session.js`를 먼저 불러온 뒤 자기 JS 파일을 불러옵니다. `session.js`는 로그인 상태 읽기, 로그아웃, localStorage 목록 읽기·쓰기를 `window.Kkuni`로 제공하고, 로그인한 경우 헤더의 로그인 버튼을 `이름님` 마이페이지 링크로 바꿉니다. 헤더의 `<span class="login-link-text">`가 이 텍스트 자리입니다. 담당자는 해당 HTML에서 화면 구조를, 해당 JS에서 이벤트와 기능을 수정하면 됩니다. 메뉴는 일반 링크로 각 HTML 페이지에 이동합니다. 헤더는 각 HTML에 포함되어 있으며, 현재 메뉴의 `active` 클래스와 `aria-current="page"`도 HTML에서 지정합니다.
 
 공통 스타일은 `css/main.css`, 헤더 로고는 `img/icons/03-낚시꾸니.png`입니다. 지역 선택의 시·군 버튼은 `index.html`의 `<template>`을 복제한 뒤 텍스트와 이벤트를 연결합니다. JS에는 HTML 문자열이나 `innerHTML`을 사용하지 않습니다.
 
@@ -39,6 +40,29 @@ JSON.parse(localStorage.getItem("kkuni-users"));
 같은 브라우저와 같은 사이트 주소에서 실행해야 같은 저장소를 사용합니다. `file:` 주소의 저장소 동작은 브라우저마다 다를 수 있으므로 개발 시에는 Live Server 같은 정적 파일 서버로 실행하면 주소를 일정하게 유지하기 쉽습니다. [localStorage 동작 문서](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage)
 
 이 로그인은 브라우저 저장소로 동작을 연습하는 기능입니다. 실제 서비스의 계정 검증과 접근 권한은 서버에서 처리해야 합니다.
+
+커뮤니티는 주소로 글을 바로 열 수 있습니다. `community.html?post=ID`는 상세, `community.html?edit=ID`는 수정 창(작성자만)을 엽니다. `&from=mypage`를 붙이면 저장하거나 취소한 뒤 `mypage.html?tab=posts`로 돌아갑니다. 마이페이지는 `?tab=favorites|markers|trips|posts|account`로 처음 열 탭을 정할 수 있습니다.
+
+로그인 화면은 `login.html?next=community.html`처럼 `next`가 있으면 로그인 후 해당 페이지로 돌아갑니다. 같은 폴더의 `*.html` 이름만 허용합니다.
+
+## 브라우저 저장 데이터
+
+모든 목록은 localStorage에 JSON 배열로 저장하며, 소유자는 이메일로 구분합니다. 지도 탐색과 여행 플래너를 구현할 때 아래 형식에 맞춰 저장하면 마이페이지에 바로 표시됩니다.
+
+| 키 | 항목 형식 | 작성 화면 |
+| --- | --- | --- |
+| `kkuni-posts` | `{ id, ownerEmail, author, category(story·hidden·qna·free), title, body, images: [{ id, width, height }], likes, createdAt, updatedAt }` | 커뮤니티 |
+| `kkuni-favorites` | `{ userEmail, place: { id, name, category, sample? } }` | 지도 탐색 (예정) |
+| `kkuni-markers` | `{ id, ownerEmail, category(point·store), name, lat, lng, address, desc, visibility(public·private), createdAt }` | 지도 탐색 (예정) |
+| `kkuni-trips` | `{ id, ownerEmail, name, start, end, days: [{ places: [{ id, ... }] }] }` | 여행 플래너 (예정) |
+
+게시글 사진은 용량 때문에 localStorage가 아니라 IndexedDB `kkuni-images`(store `images`)에 `{ id, full, thumb, width, height }` Blob으로 저장하고, 글에는 사진 `id`만 남깁니다. 첨부할 때 브라우저에서 자동으로 크기를 맞춥니다.
+
+- `full`: 비율을 유지한 채 긴 변을 1600px 이하로 줄인 JPEG. 상세 화면에서 창 폭과 높이(최대 520px) 안에 잘림 없이 표시합니다.
+- `thumb`: 가운데를 2:1로 잘라 640×320으로 만든 JPEG. 카드 썸네일 칸도 2:1이라 추가로 잘리거나 여백이 생기지 않습니다. 비율을 바꾸려면 `js/community.js`의 `THUMB_WIDTH`/`THUMB_HEIGHT`와 `css/community.css`의 `.post-thumb` `aspect-ratio`를 함께 바꿉니다.
+- 글당 최대 4장, 원본 20MB 이하, JPG·PNG·WebP·GIF·AVIF를 받습니다. 휴대폰 사진의 회전 정보를 반영하고, 투명 배경은 흰색으로 채웁니다. GIF 애니메이션은 첫 장면만 저장됩니다.
+
+장소 `category`는 `point`, `store`, `attraction`, `restaurant`, `lodging`, `festival` 중 하나입니다. 마이페이지에서 등록 장소를 삭제하면 모든 사용자의 관심 장소와 여행 일정에서 같은 `id`의 장소도 제거됩니다. 회원 탈퇴는 확인 문구 `탈퇴`와 현재 비밀번호를 확인한 뒤 계정과 본인 소유의 위 데이터를 모두 지우고 로그아웃합니다.
 
 ## 로그인 검증
 

@@ -171,7 +171,13 @@
       }
       alert(user.name + "님, 로그인되었습니다.");
       loginPassword.value = "";
-      window.location.href = "index.html";
+      window.location.href = nextPage();
+    }
+
+    // login.html?next=community.html처럼 온 경우 같은 사이트의 페이지로만 돌아갑니다.
+    function nextPage() {
+      const match = /[?&]next=([a-z-]+\.html)(?:&|$)/.exec(window.location.search || "");
+      return match && match[1] !== "login.html" ? match[1] : "index.html";
     }
 
     function setLoginBusy(busy) {

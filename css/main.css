@@ -476,3 +476,176 @@ button:active { transform: scale(0.98) !important; transition-duration: 100ms !i
   filter: drop-shadow(0 9px 6px rgba(24, 80, 160, .35));
 }
 #korea-map path[id].dimmed { opacity: .78; }
+
+/* ---------- 공통 페이지 구성 요소 (커뮤니티·마이페이지) ---------- */
+.login-link.signed-in { max-width: 200px; }
+.login-link-text { overflow: hidden; text-overflow: ellipsis; }
+
+/* 내용이 길어지는 페이지는 고정 높이 대신 내용만큼 늘어납니다. */
+.app-shell.page-shell { height: auto; min-height: calc(100vh - 145px); overflow: visible; }
+.page-stage { gap: 24px; padding: 32px 28px 28px; }
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 4px;
+}
+.page-title {
+  margin: 0 0 8px;
+  color: #16243b;
+  font-size: clamp(1.6rem, 2.6vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+.page-subtitle { margin: 0; color: #6b7a90; font-size: 0.86rem; }
+
+.primary-button {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 12px;
+  color: #fff;
+  background: var(--ocean);
+  box-shadow: 0 6px 16px rgba(49, 130, 246, 0.24);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+.primary-button:hover { background: #1b64da; }
+.primary-button:disabled { opacity: 0.6; cursor: wait; }
+.primary-button svg, .soft-button svg { width: 16px; height: 16px; }
+
+.soft-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 12px;
+  color: var(--ocean);
+  background: var(--lime);
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+.soft-button:hover { background: #d7eaff; }
+.danger-button {
+  min-height: 36px;
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 12px;
+  color: #e5484d;
+  background: #ffecec;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.danger-button:hover { background: #ffdcdc; }
+.danger-button.solid { color: #fff; background: #e5484d; }
+.danger-button.solid:hover { background: #cf3338; }
+
+.soft-chip {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  border: 1px solid #e3e9f1;
+  border-radius: 999px;
+  color: #4e6382;
+  background: #f4f7fb;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+.empty-state {
+  padding: 40px 20px;
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  border: 1px dashed #c9d6e6;
+  border-radius: 18px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+.empty-state p { margin: 0; }
+.form-error { margin: 0; color: #e5484d; font-size: 0.82rem; font-weight: 600; }
+
+/* 공통 대화상자 */
+.kkuni-dialog {
+  width: min(560px, calc(100% - 32px));
+  max-height: calc(100vh - 48px);
+  padding: 28px;
+  border: 0;
+  border-radius: 24px;
+  color: var(--ink);
+  background: var(--paper);
+  box-shadow: 0 24px 60px rgba(17, 38, 74, 0.22);
+}
+.kkuni-dialog::backdrop { background: rgba(22, 36, 59, 0.42); }
+.dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.dialog-head h2 { margin: 0; font-size: 1.25rem; letter-spacing: -0.03em; }
+.dialog-close {
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 10px;
+  color: #6b7a90;
+  background: #f2f5f9;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+.form-field { display: grid; gap: 7px; margin-bottom: 14px; }
+.form-field label { color: #33445c; font-size: 0.82rem; font-weight: 700; }
+.form-field input, .form-field select, .form-field textarea {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid #dbe3ec;
+  border-radius: 12px;
+  color: var(--ink);
+  background: #f9fbfd;
+  font: inherit;
+  font-size: 0.9rem;
+}
+.form-field textarea { min-height: 200px; resize: vertical; line-height: 1.6; }
+.form-field input:focus, .form-field select:focus, .form-field textarea:focus {
+  outline: 2px solid rgba(49, 130, 246, 0.35);
+  border-color: var(--ocean);
+  background: #fff;
+}
+.field-hint { color: var(--muted); font-size: 0.74rem; text-align: right; }
+
+@media (max-width: 640px) {
+  .page-stage { padding: 20px 16px; }
+  .page-head { flex-direction: column; }
+  .kkuni-dialog { padding: 22px 18px; }
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

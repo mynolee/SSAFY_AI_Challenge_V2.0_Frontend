@@ -1,0 +1,247 @@
+.mypage-layout {
+  display: grid;
+  grid-template-columns: 274px minmax(0, 1fr);
+  align-items: start;
+  gap: 22px;
+}
+
+/* 왼쪽 프로필 카드 */
+.profile-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 28px 28px;
+  border: 1px solid #edf1f6;
+  border-radius: 24px;
+  background: var(--paper);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.profile-avatar {
+  width: 78px;
+  height: 78px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--ocean);
+  background: var(--lime);
+}
+.profile-avatar svg {
+  width: 34px;
+  height: 34px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.profile-name {
+  max-width: 100%;
+  margin: 18px 0 6px;
+  overflow: hidden;
+  color: #16243b;
+  font-size: 1.3rem;
+  letter-spacing: -0.03em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profile-meta {
+  max-width: 100%;
+  margin: 0 0 14px;
+  overflow: hidden;
+  color: #6b7a90;
+  font-size: 0.74rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profile-badge {
+  padding: 6px 13px;
+  border-radius: 999px;
+  color: var(--ocean);
+  background: var(--lime);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.mypage-tabs {
+  width: 100%;
+  display: grid;
+  gap: 6px;
+  margin: 22px 0 18px;
+}
+.mypage-tab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 12px;
+  color: #6b7a90;
+  background: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.mypage-tab svg, .stat-card svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mypage-tab:hover { color: var(--ocean); background: #f4f8fe; }
+.mypage-tab[aria-selected="true"] { color: var(--ocean); background: var(--lime); font-weight: 700; }
+.mypage-tab:focus-visible { outline: 2px solid var(--ocean); outline-offset: 2px; }
+.profile-action { width: 100%; min-height: 44px; }
+
+/* 오른쪽 통계와 목록 */
+.mypage-content { min-width: 0; display: grid; gap: 18px; }
+.stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.stat-card {
+  display: grid;
+  gap: 14px;
+  justify-items: start;
+  padding: 24px 22px 22px;
+  border: 1px solid #edf1f6;
+  border-radius: 20px;
+  background: var(--paper);
+  box-shadow: var(--shadow);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 140ms ease, transform 140ms ease;
+}
+.stat-card:hover { border-color: #cfe1fb; transform: translateY(-2px); }
+.stat-label { color: #6b7a90; font-size: 0.76rem; }
+.stat-value { color: var(--ocean); font-size: 1.6rem; font-weight: 800; line-height: 1.2; }
+
+.panel-card {
+  padding: 28px 28px 22px;
+  border: 1px solid #edf1f6;
+  border-radius: 24px;
+  background: var(--paper);
+  box-shadow: var(--shadow);
+}
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.panel-head h2 { margin: 0; color: #16243b; font-size: 1.4rem; letter-spacing: -0.04em; }
+
+.item-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.item-grid:empty { display: none; }
+.item-grid.single-column { grid-template-columns: 1fr; }
+.list-item {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  border: 1px solid #e9eef4;
+  border-radius: 16px;
+  background: #fff;
+}
+.item-icon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: var(--ocean);
+  background: var(--lime);
+}
+.item-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.type-post .item-icon { width: 64px; } /* 사진 유무와 관계없이 제목 위치를 맞춥니다. */
+.item-icon.has-photo { width: 64px; height: 42px; overflow: hidden; background: #d6e5f6; }
+.item-icon img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.item-name a { color: inherit; text-decoration: none; }
+.item-name a:hover { color: var(--ocean); text-decoration: underline; }
+.type-store .item-icon { color: #8b5cf6; background: #f3efff; }
+.type-attraction .item-icon { color: #16a37a; background: #e8f7f1; }
+.type-restaurant .item-icon { color: #f2803a; background: #fff2e8; }
+.type-lodging .item-icon { color: #0e9fb3; background: #e6f7fa; }
+.type-festival .item-icon { color: #e0518a; background: #fdeef4; }
+.item-text { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.item-name { overflow: hidden; color: var(--ink); font-size: 0.86rem; text-overflow: ellipsis; white-space: nowrap; }
+.item-meta { overflow: hidden; color: #6b7a90; font-size: 0.72rem; text-overflow: ellipsis; white-space: nowrap; }
+.item-actions { flex: 0 0 auto; display: flex; gap: 6px; }
+.item-action {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 9px;
+  color: #6b7a90;
+  background: #f2f5f9;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+.item-action:hover { color: var(--ocean); background: var(--lime); }
+.item-action.danger:hover { color: #e5484d; background: #ffecec; }
+
+.account-info { display: grid; gap: 0; margin: 0; }
+.account-info div {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px 4px;
+  border-bottom: 1px solid var(--line);
+}
+.account-info dt { color: #6b7a90; font-size: 0.82rem; }
+.account-info dd { margin: 0; overflow-wrap: anywhere; font-size: 0.88rem; font-weight: 600; }
+
+.danger-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid #edf1f6;
+}
+.danger-title { margin: 0 0 4px; font-size: 0.86rem; font-weight: 700; }
+.danger-copy { margin: 0; color: #6b7a90; font-size: 0.76rem; }
+
+/* 탈퇴 대화상자 */
+.withdraw-lead { margin: 0 0 12px; color: #33445c; font-size: 0.88rem; line-height: 1.6; }
+.withdraw-scope {
+  margin: 0 0 18px;
+  padding: 14px 18px 14px 34px;
+  border-radius: 14px;
+  color: #4e5968;
+  background: #fff6f6;
+  font-size: 0.84rem;
+  line-height: 1.9;
+}
+.withdraw-scope strong { color: #e5484d; }
+
+@media (max-width: 1200px) {
+  .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 1000px) {
+  .mypage-layout { grid-template-columns: 1fr; }
+  .mypage-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .item-grid { grid-template-columns: 1fr; }
+  .panel-card { padding: 22px 18px; }
+  .danger-row { flex-direction: column; align-items: flex-start; }
+  .account-info div { grid-template-columns: 1fr; gap: 4px; }
+}

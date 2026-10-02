@@ -9,6 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/community.css" />
+    <script src="js/session.js" defer></script>
     <script src="js/community.js" defer></script>
   </head>
   <body>
@@ -38,21 +40,207 @@
             </div>
             <a class="login-link" href="login.html">
               <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3"/><path d="M5.5 19v-2a6.5 6.5 0 0 1 13 0v2"/></svg>
-              로그인
+              <span class="login-link-text">로그인</span>
             </a>
           </div>
         </div>
       </header>
 
-      <div class="app-shell" id="community-page">
-        <main class="main-stage">
-          <section class="page-placeholder" aria-labelledby="community-page-title">
-            <p class="page-eyebrow">COMMUNITY</p>
-            <h2 id="community-page-title">커뮤니티</h2>
-            <p>커뮤니티 화면을 준비 중입니다.</p>
+      <div class="app-shell page-shell" id="community-page">
+        <main class="main-stage page-stage">
+          <div class="page-head">
+            <div>
+              <h1 class="page-title">꾸니들의 이야기</h1>
+              <p class="page-subtitle">낚시 이야기부터 숨은 장소까지, 함께 여행을 만들어가요.</p>
+            </div>
+            <button class="primary-button" id="write-button" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg>
+              이야기 쓰기
+            </button>
+          </div>
+
+          <section class="community-banner" aria-labelledby="banner-title">
+            <img class="banner-mascot" src="img/icons/05-wave.png" alt="" />
+            <div class="banner-text">
+              <p class="banner-eyebrow">OUR FISHING STORIES</p>
+              <h2 id="banner-title">나만 알고 있던 장소, 함께 떠나는 여행.</h2>
+              <p>포인트의 추억도, 여행의 작은 발견도. 꾸니들과 자유롭게 나눠보세요.</p>
+            </div>
+            <span class="soft-chip banner-chip">커뮤니티</span>
           </section>
+
+          <div class="board-toolbar">
+            <div class="filter-chips" id="category-filter" role="group" aria-label="게시글 카테고리">
+              <button class="filter-chip" type="button" data-category="all" aria-pressed="true">전체</button>
+              <button class="filter-chip" type="button" data-category="story" aria-pressed="false">여행 이야기</button>
+              <button class="filter-chip" type="button" data-category="hidden" aria-pressed="false">숨은 장소</button>
+              <button class="filter-chip" type="button" data-category="qna" aria-pressed="false">질문·답변</button>
+              <button class="filter-chip" type="button" data-category="free" aria-pressed="false">자유 토론</button>
+            </div>
+            <p class="post-count" id="post-count" aria-live="polite"></p>
+          </div>
+
+          <p class="form-error" id="board-error" role="alert" hidden></p>
+          <div class="post-grid" id="post-grid"></div>
+          <div class="empty-state" id="post-empty" hidden>
+            <p>이 카테고리에는 아직 이야기가 없어요.<br />첫 번째 이야기를 남겨보세요.</p>
+            <button class="soft-button" id="empty-write" type="button">이야기 쓰기</button>
+          </div>
+
+          <p class="board-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.4A8 8 0 1 1 21 12Z"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01"/></svg>
+            게시글은 이 브라우저에 저장됩니다. 실제 회원 간 게시판과 댓글 공유는 서버 연동이 필요합니다.
+          </p>
         </main>
       </div>
     </div>
+
+    <!-- 게시글 카드: JS가 복제한 뒤 텍스트와 썸네일을 채웁니다. -->
+    <template id="post-card-template">
+      <article class="post-card">
+        <button class="post-open" type="button">
+          <span class="post-thumb"><span class="photo-count" hidden></span></span>
+          <span class="post-body">
+            <span class="category-pill"></span>
+            <span class="post-title"></span>
+            <span class="post-excerpt"></span>
+          </span>
+        </button>
+        <div class="post-footer">
+          <span class="post-meta"></span>
+          <span class="post-likes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/></svg>
+            <span class="like-count"></span>
+          </span>
+        </div>
+      </article>
+    </template>
+
+    <!-- 작성 창의 사진 미리보기 -->
+    <template id="image-preview-template">
+      <li class="image-preview">
+        <img alt="" />
+        <button class="image-remove" type="button">삭제</button>
+      </li>
+    </template>
+
+    <!-- 카테고리별 썸네일 그림 (사진이 없는 글에 사용) -->
+    <template id="thumb-story">
+      <svg viewBox="0 0 270 180" aria-hidden="true">
+        <rect width="270" height="180" fill="#d6e5f6" />
+        <circle cx="206" cy="44" r="19" fill="#fbe3c6" />
+        <path d="M76 32l4-4 4 4M48 56l4-4 4 4" stroke="#7b97bb" stroke-width="1.6" fill="none" />
+        <path d="M0 96c40-18 80-18 120-4s90 14 150-8v96H0Z" fill="#b6cfea" />
+        <path d="M0 122c50-14 90-10 140 2s90 8 130-6v62H0Z" fill="#94b6dc" />
+        <path d="M34 170l18-36h70l26 26-34 10Z" fill="#eef4fb" />
+        <path d="M46 152V126h28c8 4 10 14 4 24" stroke="#3f5f8c" stroke-width="2" fill="none" />
+      </svg>
+    </template>
+    <template id="thumb-qna">
+      <svg viewBox="0 0 270 180" aria-hidden="true">
+        <rect width="270" height="180" fill="#d6e5f6" />
+        <circle cx="206" cy="44" r="19" fill="#fbe3c6" />
+        <path d="M78 34l4-4 4 4M50 58l4-4 4 4" stroke="#7b97bb" stroke-width="1.6" fill="none" />
+        <path d="M0 108c50-14 100-14 150 0s80 10 120-4v76H0Z" fill="#b6cfea" />
+        <path d="M70 76h130v98H70Z" fill="#fff" />
+        <path d="M60 48h150l10 28H50Z" fill="#7aa0d4" />
+        <path d="M60 76q7.5 8 15 0t15 0 15 0 15 0 15 0 15 0 15 0 15 0 15 0 15 0" fill="none" stroke="#fff" stroke-width="3" />
+        <path d="M150 104h34v70h-34Z" fill="#a9c6ea" />
+        <path d="M88 104h40v34H88Z" fill="#e3edf9" stroke="#a9c6ea" stroke-width="2" />
+        <path d="M98 132c2-12 6-20 12-22" stroke="#3f5f8c" stroke-width="2" fill="none" />
+      </svg>
+    </template>
+    <template id="thumb-hidden">
+      <svg viewBox="0 0 270 180" aria-hidden="true">
+        <rect width="270" height="180" fill="#d6e5f6" />
+        <circle cx="206" cy="44" r="19" fill="#fbe3c6" />
+        <path d="M76 32l4-4 4 4M48 56l4-4 4 4" stroke="#7b97bb" stroke-width="1.6" fill="none" />
+        <path d="M0 112c50-14 100-14 150 0s80 10 120-4v72H0Z" fill="#b6cfea" />
+        <path d="M60 92l75-44 75 44Z" fill="#8eaedb" />
+        <path d="M72 92h126v84H72Z" fill="#fff" />
+        <path d="M90 106h18v16H90ZM162 106h18v16h-18ZM90 132h18v16H90ZM162 132h18v16h-18Z" fill="#cfe0f4" />
+        <rect x="124" y="128" width="22" height="48" rx="4" fill="#9bbbe3" />
+      </svg>
+    </template>
+    <template id="thumb-free">
+      <svg viewBox="0 0 270 180" aria-hidden="true">
+        <rect width="270" height="180" fill="#d6e5f6" />
+        <circle cx="64" cy="46" r="19" fill="#fbe3c6" />
+        <path d="M176 34l4-4 4 4M204 52l4-4 4 4" stroke="#7b97bb" stroke-width="1.6" fill="none" />
+        <path d="M0 90c40-14 90-14 140 0s90 12 130-4v94H0Z" fill="#b6cfea" />
+        <path d="M0 126c50-12 90-10 140 2s90 8 130-6v58H0Z" fill="#94b6dc" />
+        <path d="M100 120c18-20 52-20 70 0-18 20-52 20-70 0Z" fill="#fff" />
+        <path d="M170 120l18-14v28Z" fill="#fff" />
+        <circle cx="116" cy="117" r="3" fill="#3f5f8c" />
+        <path d="M62 102q4-6 8 0M200 96q4-6 8 0" stroke="#fff" stroke-width="2" fill="none" />
+      </svg>
+    </template>
+
+    <!-- 게시글 상세 -->
+    <dialog class="kkuni-dialog post-dialog" id="post-dialog" aria-labelledby="detail-title">
+      <div class="dialog-head">
+        <span class="category-pill" id="detail-category"></span>
+        <button class="dialog-close" id="detail-close" type="button">닫기</button>
+      </div>
+      <h2 class="detail-title" id="detail-title"></h2>
+      <p class="detail-meta" id="detail-meta"></p>
+      <div class="detail-gallery" id="detail-gallery" hidden></div>
+      <p class="detail-body" id="detail-body"></p>
+      <div class="detail-actions">
+        <button class="like-button" id="detail-like" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/></svg>
+          <span id="detail-like-count"></span>
+        </button>
+        <div class="owner-actions" id="owner-actions" hidden>
+          <button class="soft-button" id="detail-edit" type="button">수정</button>
+          <button class="danger-button" id="detail-delete" type="button">삭제</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- 게시글 작성·수정 -->
+    <dialog class="kkuni-dialog" id="editor-dialog" aria-labelledby="editor-title">
+      <form id="editor-form" method="dialog" novalidate>
+        <div class="dialog-head">
+          <h2 id="editor-title">이야기 쓰기</h2>
+          <button class="dialog-close" id="editor-close" type="button">닫기</button>
+        </div>
+        <div class="form-field">
+          <label for="editor-category">카테고리</label>
+          <select id="editor-category" name="category" required>
+            <option value="story">여행 이야기</option>
+            <option value="hidden">숨은 장소</option>
+            <option value="qna">질문·답변</option>
+            <option value="free">자유 토론</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="editor-post-title">제목 <span aria-hidden="true">*</span></label>
+          <input id="editor-post-title" name="title" type="text" maxlength="80" placeholder="2~80자로 입력해주세요" required />
+        </div>
+        <div class="form-field">
+          <label for="editor-body">내용 <span aria-hidden="true">*</span></label>
+          <textarea id="editor-body" name="body" maxlength="3000" placeholder="10자 이상 입력해주세요" required></textarea>
+          <span class="field-hint" id="editor-counter">0 / 3,000</span>
+        </div>
+        <div class="form-field">
+          <span class="field-label" id="image-label">사진 <span class="field-optional">선택 · 최대 4장 · 크기 자동 조정</span></span>
+          <div class="image-picker" id="image-picker" role="group" aria-labelledby="image-label">
+            <ul class="image-previews" id="image-previews"></ul>
+            <input class="visually-hidden" id="editor-images" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple />
+            <label class="image-add" id="image-add" for="editor-images">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-8 8"/></svg>
+              <span>사진 추가</span>
+            </label>
+          </div>
+          <span class="field-hint image-status" id="image-status" aria-live="polite">사진을 끌어다 놓아도 됩니다.</span>
+        </div>
+        <p class="form-error" id="editor-error" role="alert" hidden></p>
+        <div class="dialog-actions">
+          <button class="soft-button" id="editor-cancel" type="button">취소</button>
+          <button class="primary-button" id="editor-submit" type="submit">등록하기</button>
+        </div>
+      </form>
+    </dialog>
   </body>
 </html>
