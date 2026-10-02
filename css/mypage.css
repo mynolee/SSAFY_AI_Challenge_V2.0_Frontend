@@ -232,6 +232,48 @@
 }
 .withdraw-scope strong { color: #e5484d; }
 
+/* 저장한 여행의 상세 일정과 장소 메모 */
+.trip-detail-dialog {
+  width: min(960px, calc(100vw - 32px));
+  max-width: 960px;
+  max-height: calc(100dvh - 36px);
+  overflow-y: auto;
+}
+.trip-detail-dialog .dialog-head { align-items: flex-start; }
+.trip-detail-dialog .dialog-head h2 { overflow-wrap: anywhere; }
+.trip-detail-eyebrow { margin: 0 0 6px; color: var(--ocean); font-size: 0.74rem; font-weight: 800; }
+.trip-detail-meta { margin: 0 0 16px; color: #6b7a90; font-size: 0.82rem; }
+.trip-detail-summary { padding: 16px 18px; border-radius: 14px; color: #33445c; background: #f3f8ff; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+.trip-detail-route { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+.trip-detail-route span { padding: 8px 12px; border-radius: 10px; color: var(--ocean); background: var(--lime); font-size: 0.78rem; overflow-wrap: anywhere; }
+.trip-detail-map-section { margin-bottom: 24px; }
+.trip-map-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.trip-map-head h3, .trip-detail-tips h3 { margin: 0; font-size: 1rem; }
+.trip-detail-map-status, .trip-map-caption, .trip-note-help { color: #6b7a90; font-size: 0.76rem; line-height: 1.6; }
+.trip-detail-map { height: 300px; overflow: hidden; border: 1px solid #e2eaf5; border-radius: 16px; background: #edf3f8; }
+.trip-map-caption { margin: 8px 0 0; }
+.trip-memo-section .form-field textarea { min-height: 112px; }
+.trip-detail-days { display: grid; gap: 24px; margin: 24px 0; }
+.trip-day-title { margin: 0 0 12px; color: var(--ocean); font-size: 0.95rem; }
+.trip-place-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.trip-place-card { min-width: 0; padding: 18px; border: 1px solid #e5edf6; border-radius: 16px; background: #fff; }
+.trip-place-card:focus { outline: 2px solid var(--ocean); outline-offset: 3px; }
+.trip-place-head { display: flex; align-items: center; gap: 10px; }
+.trip-place-icon { width: 30px; height: 39px; flex: 0 0 auto; object-fit: contain; }
+.trip-place-heading { min-width: 0; }
+.trip-place-heading h4 { margin: 5px 0 0; color: var(--ink); font-size: 0.9rem; line-height: 1.5; overflow-wrap: anywhere; }
+.trip-place-category { color: #6b7a90; font-size: 0.71rem; }
+.trip-place-address { margin: 12px 0 6px; color: #4e5968; font-size: 0.76rem; line-height: 1.5; overflow-wrap: anywhere; }
+.trip-place-coordinates { margin: 6px 0; color: #8290a3; font-size: 0.68rem; }
+.trip-place-link { display: inline-block; margin: 8px 0 0; color: var(--ocean); font-size: 0.75rem; text-decoration: underline; text-underline-offset: 3px; }
+.trip-place-note-field { margin-top: 16px; }
+.trip-place-note-field textarea { min-height: 92px; font-size: 0.79rem; }
+.trip-detail-tips { margin: 0 0 22px; padding: 16px 18px; border-radius: 14px; background: #f8fafc; }
+.trip-detail-tips ul { margin: 12px 0 0; padding-left: 20px; color: #59677d; font-size: 0.8rem; line-height: 1.8; overflow-wrap: anywhere; }
+.trip-detail-footer { position: sticky; bottom: -28px; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 20px; padding: 16px 0; border-top: 1px solid #e5edf6; background: #fff; }
+.trip-detail-footer p { margin: 0; color: var(--ocean); font-size: 0.78rem; line-height: 1.5; }
+.trip-detail-footer button { flex: 0 0 auto; }
+
 @media (max-width: 1200px) {
   .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -244,4 +286,10 @@
   .panel-card { padding: 22px 18px; }
   .danger-row { flex-direction: column; align-items: flex-start; }
   .account-info div { grid-template-columns: 1fr; gap: 4px; }
+  .trip-detail-dialog { width: calc(100vw - 24px); max-height: calc(100dvh - 24px); }
+  .trip-detail-map { height: 240px; }
+  .trip-place-grid { grid-template-columns: 1fr; }
+  .trip-detail-footer { bottom: -22px; }
+  .type-trip { flex-wrap: wrap; }
+  .type-trip .item-actions { margin-left: 58px; }
 }

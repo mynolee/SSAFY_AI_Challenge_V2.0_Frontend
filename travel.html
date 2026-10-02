@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/travel.css" />
     <script src="js/session.js" defer></script>
     <script src="js/travel.js" defer></script>
   </head>
@@ -32,10 +33,9 @@
           </nav>
 
           <div class="header-actions">
-            <div class="weather-chip" aria-label="떠나기 좋은 하루, 디자인 시안">
-              <span class="weather-icon" aria-hidden="true">☼</span>
-              <span class="weather-text">떠나기 좋은 하루</span>
-              <span class="weather-note">디자인 시안</span>
+            <div class="weather-chip" aria-label="선택한 여행 지역">
+              <span class="weather-icon" aria-hidden="true">⌖</span>
+              <span class="weather-text" id="travel-header-region">지역 확인 중</span>
             </div>
             <a class="login-link" href="login.html">
               <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3"/><path d="M5.5 19v-2a6.5 6.5 0 0 1 13 0v2"/></svg>
@@ -45,12 +45,54 @@
         </div>
       </header>
 
-      <div class="app-shell" id="travel-page">
+      <div class="app-shell page-shell" id="travel-page">
         <main class="main-stage">
-          <section class="page-placeholder" aria-labelledby="travel-page-title">
+          <section class="travel-page-heading" aria-labelledby="travel-page-title">
+            <div>
             <p class="page-eyebrow">TRAVEL PLANNER</p>
-            <h2 id="travel-page-title">여행 플래너</h2>
-            <p>여행 플래너 화면을 준비 중입니다.</p>
+            <h1 id="travel-page-title">낚시의 설렘에 여행을 더해요</h1>
+            <p>출발지와 낚시 목적지를 고르면, 실제 장소로 세 가지 여행을 제안해요.</p>
+            </div>
+            <a class="travel-button travel-button-light" href="mypage.html?tab=trips">저장한 여행 보기</a>
+          </section>
+
+          <section class="travel-explorer" aria-label="여행의 출발지와 도착지 선택">
+            <aside class="travel-controls">
+              <div class="travel-step-heading"><span>01</span><div><h2>여행의 시작과 끝</h2><p>지도 클릭 또는 장소 검색으로 선택해요.</p></div></div>
+              <fieldset class="travel-target-picker"><legend class="travel-sr-only">현재 지도에서 선택할 위치</legend><label><input type="radio" name="travel-target" value="origin" checked /><span class="travel-origin-dot"></span>출발지 선택</label><label><input type="radio" name="travel-target" value="destination" /><span class="travel-destination-dot"></span>도착지 선택</label></fieldset>
+              <div class="travel-endpoint" id="travel-origin"><div><span class="travel-origin-dot"></span><strong>출발지</strong><button class="travel-text-button" type="button" data-reset-endpoint="origin" aria-label="출발지 선택 해제" hidden>지우기</button></div><p id="travel-origin-name">아직 선택하지 않았어요</p><small id="travel-origin-coordinates">지도에서 여행의 시작점을 찍어주세요.</small></div>
+              <div class="travel-endpoint" id="travel-destination"><div><span class="travel-destination-dot"></span><strong>도착지 · 낚시 포인트</strong><button class="travel-text-button" type="button" data-reset-endpoint="destination" aria-label="도착지 선택 해제" hidden>지우기</button></div><p id="travel-destination-name">아직 선택하지 않았어요</p><small id="travel-destination-coordinates">가고 싶은 낚시터나 장소를 골라주세요.</small></div>
+
+              <form class="travel-search-form" id="travel-search-form"><label class="travel-sr-only" for="travel-search-query">주소 또는 장소 이름 검색</label><input id="travel-search-query" type="search" maxlength="100" placeholder="주소, 역, 낚시터 이름 검색" required /><button class="travel-button travel-button-primary" type="submit" id="travel-search-submit" disabled>검색</button></form>
+              <button class="travel-button travel-button-light travel-fishing-search" type="button" id="travel-fishing-search" disabled>현재 지도 주변 낚시터 찾기</button>
+              <p class="travel-search-status" id="travel-search-status" role="status">카카오 지도를 준비하고 있어요.</p>
+              <div class="travel-search-results" id="travel-search-results"></div>
+              <button class="travel-button travel-button-light travel-search-more" type="button" id="travel-search-more" hidden>다음 검색 결과 15개</button>
+              <details class="travel-my-points"><summary>내가 저장한 낚시 포인트</summary><div id="travel-my-points"></div></details>
+
+              <form id="travel-plan-form">
+                <div class="travel-step-heading travel-date-heading"><span>02</span><div><h2>언제, 어떻게 떠날까요?</h2><p>당일 여행부터 최대 7일 일정까지</p></div></div>
+                <div class="travel-date-fields"><label>시작 날짜<input type="date" id="travel-start" required /></label><label>종료 날짜<input type="date" id="travel-end" required /></label></div>
+                <label class="travel-preferences" for="travel-preferences">나의 여행 취향<textarea id="travel-preferences" maxlength="1000" rows="3" placeholder="예: 아이와 함께, 해산물 식당, 한적한 산책, 낚시 위주"></textarea></label>
+                <p class="travel-save-note">로그인 없이 추천받을 수 있어요. 선택한 플랜 저장은 로그인 후 가능합니다.</p>
+                <button class="travel-button travel-button-primary travel-generate" type="submit" id="travel-generate" disabled>✦ AI 여행 플랜 3개 만들기</button>
+              </form>
+            </aside>
+            <div class="travel-map-wrap">
+              <div class="travel-map" id="travel-map" role="region" aria-label="여행 출발지 도착지 카카오 지도"></div>
+              <div class="travel-map-toolbar"><span id="travel-map-mode">초록 출발지를 지도에서 선택하세요</span><button class="travel-button travel-button-light" type="button" id="travel-fit-route" disabled>선택한 위치 모두 보기</button></div>
+              <div class="travel-map-loading" id="travel-map-loading" role="status"><span class="travel-spinner" aria-hidden="true"></span><p>카카오 지도를 불러오고 있어요.</p></div>
+              <div class="travel-map-error" id="travel-map-error" role="alert" hidden><h2>지도를 불러오지 못했어요</h2><p id="travel-map-error-message"></p><button class="travel-button travel-button-primary" type="button" id="travel-map-retry">다시 시도</button></div>
+              <div class="travel-route-notice"><span>초록 출발 · 파랑 도착</span><p>지도 점선은 두 지점의 연결선입니다. 실제 도로 경로와 이동 시간은 카카오 길찾기에서 확인하세요.</p><a class="travel-text-link" id="travel-directions" href="https://map.kakao.com" target="_blank" rel="noopener noreferrer" hidden>카카오맵 길찾기 ↗</a></div>
+            </div>
+          </section>
+
+          <section class="travel-plans" aria-labelledby="travel-plans-title">
+            <div class="travel-plans-heading"><div><p class="page-eyebrow">THREE WAYS TO TRAVEL</p><h2 id="travel-plans-title">내 취향에 맞는 여행을 골라보세요</h2><p>카카오맵의 실제 숙소·음식점·명소를 바탕으로 AI가 구성합니다.</p></div><span class="travel-model-label">gpt-5.6-luna</span></div>
+            <p class="travel-plan-message" id="travel-plan-message" role="status">출발지, 도착지, 여행 날짜를 선택한 뒤 세 가지 플랜을 만들어보세요.</p>
+            <div class="travel-generation-loading" id="travel-generation-loading" hidden><span class="travel-spinner" aria-hidden="true"></span><div><strong id="travel-generation-step">주변의 실제 장소를 확인하고 있어요.</strong><p>결과가 준비될 때까지 기다려주세요. 위치와 날짜를 바꾸면 진행 중인 추천은 취소됩니다.</p></div><button class="travel-button travel-button-light" type="button" id="travel-generation-cancel">취소</button></div>
+            <div class="travel-plan-cards" id="travel-plan-cards"></div>
+            <p class="travel-plan-footnote">숙박 장소는 숙박을 고려할 때의 추천입니다. 운영 시간·예약·낚시 허용 구역과 실제 교통편은 방문 전 확인하세요.</p>
           </section>
         </main>
       </div>

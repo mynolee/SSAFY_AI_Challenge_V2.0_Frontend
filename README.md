@@ -6,12 +6,12 @@
 
 | 담당 화면 | HTML | JS | 현재 기능 |
 | --- | --- | --- | --- |
-| 지역 선택 홈 | `index.html` | `js/main.js` | 전국 17개 시도 지도, 시·군 선택, 선택 상태 저장·복원 |
-| 지도 탐색 | `map.html` | `js/map.js` | 지도 탐색 화면 틀 |
-| 여행 플래너 | `travel.html` | `js/travel.js` | 여행 플래너 화면 틀 |
+| 지역 선택 홈 | `index.html` | `js/main.js` | 전국 17개 시도 지도, 시·군 선택, 선택 상태 저장·복원, 오늘 날짜·현재 날씨·시간별 예보 |
+| 지도 탐색 | `map.html` | `js/map.js` | 선택 지역 카카오맵, 낚시 포인트·용품점 검색, 주변 명소·음식점·숙박 필터, 이미지 선택 마커 등록 |
+| 여행 플래너 | `travel.html` | `js/travel.js` | 지도 출발·도착 선택, 실제 장소로 AI 추천 3개, 여행 선택·저장 |
 | 커뮤니티 | `community.html` | `js/community.js` | 카테고리 필터, 게시글 작성·상세·수정·삭제 (작성자만 수정·삭제) |
 | 로그인 | `login.html` | `js/login.js` | 회원가입 창, 로컬 회원 저장, 로그인, 데모 계정 |
-| 마이페이지 | `mypage.html` | `js/mypage.js` | 관심 장소·등록 장소·저장 여행·내가 쓴 글 목록, 계정 정보, 로그아웃, 회원 탈퇴 |
+| 마이페이지 | `mypage.html` | `js/mypage.js` | 관심 장소·등록 장소·저장 여행·내가 쓴 글 목록, 여행 상세 지도·전체/장소 메모, 계정 정보, 로그아웃, 회원 탈퇴 |
 
 모든 페이지는 공통 `js/session.js`를 먼저 불러온 뒤 자기 JS 파일을 불러옵니다. `session.js`는 로그인 상태 읽기, 로그아웃, localStorage 목록 읽기·쓰기를 `window.Kkuni`로 제공하고, 로그인한 경우 헤더의 로그인 버튼을 `이름님` 마이페이지 링크로 바꿉니다. 헤더의 `<span class="login-link-text">`가 이 텍스트 자리입니다. 담당자는 해당 HTML에서 화면 구조를, 해당 JS에서 이벤트와 기능을 수정하면 됩니다. 메뉴는 일반 링크로 각 HTML 페이지에 이동합니다. 헤더는 각 HTML에 포함되어 있으며, 현재 메뉴의 `active` 클래스와 `aria-current="page"`도 HTML에서 지정합니다.
 
@@ -21,7 +21,35 @@
 
 ## 실행
 
-브라우저에서 `index.html` 또는 작업할 페이지의 HTML을 직접 열거나, 정적 파일 서버로 이 폴더를 실행합니다. 지도와 지역 선택에는 백엔드가 필요하지 않습니다.
+지역 선택과 커뮤니티 같은 정적 화면은 HTML을 직접 열거나 정적 파일 서버로 이 폴더를 실행해 확인할 수 있습니다.
+
+카카오맵, 날씨·물때와 AI 여행 추천을 사용하려면 Node.js 20.12 이상에서 프로젝트 폴더의 서버를 실행합니다.
+
+```bash
+node server.cjs
+```
+
+`http://127.0.0.1:5500`에서 홈을, `http://127.0.0.1:5500/map.html`에서 지도를 확인할 수 있습니다. 서버는 같은 폴더의 `.env`를 자동으로 읽습니다. `KAKAO_MAP_KEY`는 카카오맵 JavaScript 키, `DATA_GO_KR_KEY`는 공공데이터 API의 공통 인증키입니다. `.env`에는 각 API의 기본 엔드포인트와 서버 `PORT`도 저장합니다. 현재 카카오 키에서 허용된 로컬 주소가 `http://127.0.0.1:5500`이므로 이 주소를 사용합니다. 다른 호스트나 포트를 사용하려면 카카오 개발자 콘솔에도 해당 웹사이트 주소를 등록해야 합니다. 공공데이터 인증키는 서버에서 사용하고, 브라우저에는 카카오맵 SDK에 필요한 키만 전달합니다. `.env`를 변경하면 서버를 다시 실행합니다. `.env`는 Git 추적에서 제외됩니다.
+
+## 날짜·날씨와 지도 탐색
+
+홈에서 시도와 시·군·구를 선택하면 우측 상단의 날짜·날씨 버튼이 해당 지역으로 바뀝니다. 버튼을 누르면 한국 시간 기준 오늘의 시간별 기온, 하늘 상태, 강수, 습도, 풍속을 확인할 수 있습니다. 날씨는 기상청 초단기실황과 단기예보를 사용하며, 제공되지 않은 시간이나 항목은 미제공 상태로 표시합니다. 조회 중 지역을 바꾸면 마지막으로 선택한 지역의 결과만 반영합니다.
+
+날씨 창은 천문연구원의 일출·일몰·월출·월몰·음력 정보와 기상청의 최신 전국 기상특보 현황도 함께 표시합니다. 특보는 `getPwnStatus`로 조회해 전날 발표된 최신 특보·예비특보·참고사항과 발표/현황 기준시각을 보여줍니다. 특보 없음, 자료 없음, 조회 실패를 구분하고 전국 범위를 명시합니다. 이전의 오늘 발표 목록은 발표가 없는 날 코드 `03`을 반환해 현황을 보여주지 못했습니다. [기상청 서비스 명세](https://www.data.go.kr/data/15000415/openapi.do) 지도 아래에는 국립해양조사원의 조석예보·최신 조위관측·바다낚시지수를 표시합니다. 지도에서 조회한 좌표 35km 이내의 기준 관측소와 낚시 예보 지점을 사용하며 거리·기준 시각·출처를 함께 표시합니다. 지도 이동 후에는 물때 다시 조회 버튼으로 현재 지도 중심의 정보를 갱신합니다. 제공기관에서 받지 못한 항목은 빈 상태로 표시합니다.
+
+지도 탐색은 홈의 선택 지역을 카카오 주소 검색으로 찾아 중심 좌표로 사용합니다. 낚시 포인트와 용품점은 카카오 장소 검색 결과이며, 명소·음식점·숙박 토글로 현재 지도 주변의 장소를 함께 볼 수 있습니다. 지도 위치를 이동하면 검색 범위도 바뀝니다. 검색 결과는 실제 낚시 허용 여부를 판정하는 자료가 아닙니다.
+
+마커 추가를 누르고 지도에서 위치를 찍으면 위도·경도가 입력됩니다. 이름과 장소 유형을 지정하고 물고기·낚시용품·여행·숙소·음식점의 다섯 가지 마커 이미지 중 하나를 선택할 수 있습니다. 로그인한 사용자의 마커는 기존 `kkuni-markers` 형식으로 브라우저에 저장해 새로고침 후에도 복원하고 마이페이지에 표시합니다. 비회원은 임시 마커를 사용할 수 있습니다. 카카오 검색 결과의 숙소·음식점에도 전용 마커 이미지를 사용합니다.
+
+## AI 여행 플래너와 여행 메모
+
+`travel.html`에서 지도 클릭, 카카오 장소 검색, 주변 낚시터 검색 또는 내 낚시 포인트로 출발지·도착지를 고릅니다. 각각 실제 카카오 마커를 표시하고 여행 날짜(최대 7일)와 취향을 받아 경로 중간 지점·도착지 주변의 숙박·음식점·관광명소 후보를 조회합니다. 지도 점선은 두 좌표의 연결선이며 실제 도로 경로는 카카오 길찾기에서 확인합니다.
+
+`POST /api/travel-plans`는 서버에서 [`gpt-5.6-luna`](https://developers.openai.com/api/docs/models/gpt-5.6-luna) Responses API를 호출합니다. 프로젝트 `.env`의 `OPENAI_API_KEY` 또는 기존 `OPEN_API_KEY`만 사용합니다. 해당 파일에 키가 없으면 설정 오류를 표시하며 실행 환경이나 다른 프로젝트의 키는 사용하지 않습니다. OpenAI 키는 브라우저에 전달하지 않습니다. 조회한 카카오 후보만 모델에 전달하고 [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs) 및 서버 검증으로 요청한 날짜와 실제 후보 안의 장소를 사용하는 서로 다른 조합 3개만 표시합니다. 각 조합은 출발지·도착지·숙소·음식점·명소를 포함합니다. API 연결·결제·응답 오류는 안내하며 임의 추천으로 대체하지 않습니다.
+
+추천은 로그인 없이 볼 수 있고 선택한 플랜은 로그인 후 기존 `kkuni-trips`에 저장합니다. 로그인 이동 중에도 추천을 유지합니다. 마이페이지의 저장한 여행에서 상세 일정과 카카오 마커를 확인하고 여행 전체 메모(10,000자) 및 장소별 메모(2,000자)를 저장할 수 있습니다. 동일 장소는 날짜가 달라도 여행 내 메모를 공유합니다. 메모는 현재 계정의 여행에만 저장되며 새로고침 후에도 유지됩니다. `mypage.html?tab=trips&trip=ID`로 내 여행 상세를 바로 열 수 있습니다.
+
+이번 기능에 새로 추가한 파일은 페이지 전용 `css/travel.css`와 숙소·음식점 SVG 마커 2개입니다. HTML·JS는 기존 여행 플래너·마이페이지·홈·지도 파일을 수정합니다.
 
 ## 로컬 회원 저장
 
@@ -52,9 +80,9 @@ JSON.parse(localStorage.getItem("kkuni-users"));
 | 키 | 항목 형식 | 작성 화면 |
 | --- | --- | --- |
 | `kkuni-posts` | `{ id, ownerEmail, author, category(story·hidden·qna·free), title, body, images: [{ id, width, height }], likes, createdAt, updatedAt }` | 커뮤니티 |
-| `kkuni-favorites` | `{ userEmail, place: { id, name, category, sample? } }` | 지도 탐색 (예정) |
-| `kkuni-markers` | `{ id, ownerEmail, category(point·store), name, lat, lng, address, desc, visibility(public·private), createdAt }` | 지도 탐색 (예정) |
-| `kkuni-trips` | `{ id, ownerEmail, name, start, end, days: [{ places: [{ id, ... }] }] }` | 여행 플래너 (예정) |
+| `kkuni-favorites` | `{ userEmail, place: { id, name, category, sample? } }` | 지도 탐색 |
+| `kkuni-markers` | `{ id, ownerEmail, category(point·store), name, lat, lng, address, desc, visibility(public·private), icon, createdAt }` | 지도 탐색 |
+| `kkuni-trips` | `{ id, ownerEmail, name, start, end, origin, destination, summary, days: [{ date, places: [{ id, ... }] }], tips, model, memo, placeNotes, createdAt, updatedAt }` | 여행 플래너·마이페이지 |
 
 게시글 사진은 용량 때문에 localStorage가 아니라 IndexedDB `kkuni-images`(store `images`)에 `{ id, full, thumb, width, height }` Blob으로 저장하고, 글에는 사진 `id`만 남깁니다. 첨부할 때 브라우저에서 자동으로 크기를 맞춥니다.
 

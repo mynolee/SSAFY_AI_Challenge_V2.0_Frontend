@@ -115,6 +115,20 @@
     const accountInfo = document.getElementById("account-info");
     const itemTemplate = document.getElementById("item-template");
 
+    const tripDialog = document.getElementById("trip-detail-dialog");
+    const tripForm = document.getElementById("trip-detail-form");
+    const tripMemo = document.getElementById("trip-detail-memo");
+    const tripError = document.getElementById("trip-detail-error");
+    const tripSaveStatus = document.getElementById("trip-detail-save-status");
+    const tripDaysBox = document.getElementById("trip-detail-days");
+    const tripMapBox = document.getElementById("trip-detail-map");
+    const tripMapStatus = document.getElementById("trip-detail-map-status");
+    const tripMapRetry = document.getElementById("trip-map-retry");
+    let selectedTripId = null;
+    let mapGeneration = 0;
+    let detailMapObjects = [];
+    let detailPlaces = [];
+
     const withdrawDialog = document.getElementById("withdraw-dialog");
     const withdrawForm = document.getElementById("withdraw-form");
     const withdrawConfirm = document.getElementById("withdraw-confirm");
@@ -176,9 +190,13 @@
       }
       return data.trips.map((trip) => ({
         icon: "trip", name: trip.name || "이름 없는 여행",
+        href: "mypage.html?tab=trips&trip=" + encodeURIComponent(trip.id),
         meta: [trip.start && trip.end ? trip.start.replaceAll("-", ".") + " ~ " + trip.end.replaceAll("-", ".") : "",
           "장소 " + tripPlaceCount(trip) + "곳"].filter(Boolean).join(" · "),
-        actions: [{ label: "삭제", danger: true, onClick: () => removeTrip(trip) }],
+        actions: [
+          { label: "상세·메모", onClick: () => openTrip(trip.id) },
+          { label: "삭제", danger: true, onClick: () => removeTrip(trip) },
+        ],
       }));
     }
 
@@ -326,6 +344,252 @@
       if (focus) document.getElementById("tab-" + name).focus();
     }
 
+    // ---------- 저장한 여행 상세·메모 ----------
+    function node(tag, className, text) {
+      const element = document.createElement(tag);
+      if (className) element.className = className;
+      if (text !== undefined) element.textContent = text;
+      return element;
+    }
+    function text(value, fallback = "") { return typeof value === "string" ? value : fallback; }
+    function ownedTrip(id) {
+      const user = getCurrentUser();
+      if (!user) throw new Error("저장한 여행 상세는 로그인 후 확인할 수 있어요.");
+      const trip = readList(KEYS.trips).find((item) => item && String(item.id) === String(id) && item.ownerEmail === user.email);
+      if (!trip) throw new Error("저장한 여행을 찾을 수 없습니다. 내 계정의 여행만 열 수 있어요.");
+      return trip;
+    }
+    function noteKey(place, dayIndex, placeIndex) {
+      return place && typeof place.id === "string" && place.id ? place.id : "legacy:" + dayIndex + ":" + placeIndex;
+    }
+    function location(place) {
+      if (!place || place.lat === null || place.lng === null || place.lat === "" || place.lng === "") return null;
+      const lat = Number(place.lat);
+      const lng = Number(place.lng);
+      return Number.isFinite(lat) && Number.isFinite(lng) && lat >= 32 && lat <= 40 && lng >= 124 && lng <= 133 ? { lat, lng } : null;
+    }
+    function placeLink(place) {
+      try {
+        const url = new URL(text(place.url));
+        if (!["https:", "http:"].includes(url.protocol) || url.username || url.password || url.port || !["place.map.kakao.com", "map.kakao.com", "maps.kakao.com"].includes(url.hostname)) return null;
+        url.protocol = "https:";
+        return url.toString();
+      } catch { return null; }
+    }
+    function tripPlaceLabel(category) {
+      return category === "origin" ? "출발지" : category === "destination" ? "낚시·도착지" : placeLabel(category);
+    }
+    function tripMarkerType(category) {
+      return ["lodging", "restaurant", "store", "point"].includes(category) ? category : category === "destination" ? "point" : "trip";
+    }
+    function updateTripUrl(id) {
+      const url = new URL(window.location.href);
+      if (id !== null) { url.searchParams.set("tab", "trips"); url.searchParams.set("trip", id); }
+      else url.searchParams.delete("trip");
+      window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+    }
+    function clearTripMap() {
+      mapGeneration += 1;
+      detailMapObjects.forEach((object) => object.setMap(null));
+      detailMapObjects = [];
+      tripMapBox.replaceChildren();
+    }
+    function closeTrip() {
+      if (tripDialog.open) tripDialog.close();
+    }
+    function showTripError(message) {
+      tripError.textContent = message;
+      tripError.hidden = false;
+      tripSaveStatus.textContent = "";
+    }
+    function renderTripPlaces(trip) {
+      tripDaysBox.replaceChildren();
+      detailPlaces = [];
+      const notes = trip.placeNotes && typeof trip.placeNotes === "object" && !Array.isArray(trip.placeNotes) ? trip.placeNotes : {};
+      const days = tripDays(trip);
+      if (!days.length) tripDaysBox.append(node("p", "trip-note-help", "이 여행에는 저장된 날짜별 장소가 없어요. 전체 메모를 남길 수 있습니다."));
+      days.forEach((day, dayIndex) => {
+        const section = node("section", "trip-detail-day");
+        const date = day && text(day.date);
+        section.append(node("h3", "trip-day-title", `${dayIndex + 1}일차${date ? " · " + date : ""}`));
+        const places = day && Array.isArray(day.places) ? day.places : [];
+        if (!places.length) section.append(node("p", "trip-note-help", "이 날짜에 저장된 장소가 없습니다."));
+        const cards = node("div", "trip-place-grid");
+        places.forEach((place, placeIndex) => {
+          if (!place || typeof place !== "object") return;
+          const key = noteKey(place, dayIndex, placeIndex);
+          const inputId = "trip-place-note-" + dayIndex + "-" + placeIndex;
+          const card = node("article", "trip-place-card");
+          card.id = "trip-place-" + dayIndex + "-" + placeIndex;
+          card.tabIndex = -1;
+          const category = text(place.category);
+          const name = text(place.name, "이름 없는 장소");
+          const head = node("div", "trip-place-head");
+          const icon = node("img", "trip-place-icon");
+          const imageType = tripMarkerType(category);
+          icon.src = "img/icons/marker-" + imageType + ".svg";
+          icon.alt = "";
+          const heading = node("div", "trip-place-heading");
+          heading.append(node("span", "trip-place-category", tripPlaceLabel(category)), node("h4", "", `${placeIndex + 1}. ${name}`));
+          head.append(icon, heading);
+          card.append(head);
+          if (typeof place.address === "string" && place.address) card.append(node("p", "trip-place-address", place.address));
+          const point = location(place);
+          if (point) card.append(node("p", "trip-place-coordinates", `위도 ${point.lat.toFixed(5)} · 경도 ${point.lng.toFixed(5)}`));
+          const url = placeLink(place);
+          if (url) {
+            const link = node("a", "trip-place-link", "카카오맵에서 장소 보기 ↗");
+            link.href = url;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            card.append(link);
+          }
+          const field = node("div", "form-field trip-place-note-field");
+          const label = node("label", "", "장소 메모");
+          label.htmlFor = inputId;
+          const input = node("textarea", "trip-place-note");
+          input.id = inputId;
+          input.dataset.noteKey = key;
+          input.maxLength = 2000;
+          input.rows = 3;
+          input.placeholder = "예약, 준비물, 방문 후 느낀 점을 적어보세요. (최대 2,000자)";
+          input.value = Object.hasOwn(notes, key) ? text(notes[key]) : "";
+          field.append(label, input);
+          card.append(field);
+          cards.append(card);
+          detailPlaces.push({ place, point, card, key });
+        });
+        section.append(cards);
+        tripDaysBox.append(section);
+      });
+    }
+    async function loadTripMap() {
+      clearTripMap();
+      const generation = mapGeneration;
+      const id = selectedTripId;
+      const points = detailPlaces.filter((entry) => entry.point);
+      tripMapRetry.hidden = true;
+      if (!points.length) {
+        tripMapStatus.textContent = "이 여행에는 지도에 표시할 좌표가 저장되어 있지 않습니다.";
+        tripMapBox.hidden = true;
+        return;
+      }
+      tripMapBox.hidden = false;
+      tripMapStatus.textContent = "저장한 장소의 지도를 불러오는 중이에요.";
+      try {
+        const maps = await window.Kkuni.loadKakaoMaps();
+        if (generation !== mapGeneration || !tripDialog.open || selectedTripId !== id) return;
+        ownedTrip(id);
+        const map = new maps.Map(tripMapBox, { center: new maps.LatLng(points[0].point.lat, points[0].point.lng), level: 6 });
+        const bounds = new maps.LatLngBounds();
+        const seen = new Set();
+        points.forEach(({ place, point, card }) => {
+          const position = new maps.LatLng(point.lat, point.lng);
+          bounds.extend(position);
+          const positionKey = point.lat + ":" + point.lng + ":" + text(place.category);
+          if (seen.has(positionKey)) return;
+          seen.add(positionKey);
+          const category = tripMarkerType(place.category);
+          const image = new maps.MarkerImage("img/icons/marker-" + category + ".svg", new maps.Size(44, 56), { offset: new maps.Point(22, 53) });
+          const marker = new maps.Marker({ map, position, image, title: text(place.name, "여행 장소") });
+          detailMapObjects.push(marker);
+          maps.event.addListener(marker, "click", () => {
+            card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            card.focus({ preventScroll: true });
+          });
+        });
+        if (seen.size > 1) map.setBounds(bounds, 48, 48, 48, 48);
+        tripMapStatus.textContent = `저장된 장소 ${seen.size}곳을 표시했어요. 지도를 이동하거나 확대할 수 있습니다.`;
+      } catch (error) {
+        if (generation !== mapGeneration || selectedTripId !== id) return;
+        tripMapStatus.textContent = error.message || "지도를 불러오지 못했습니다. 장소와 메모는 계속 확인할 수 있어요.";
+        tripMapRetry.hidden = false;
+      }
+    }
+    function openTrip(id) {
+      try {
+        const trip = ownedTrip(id);
+        selectedTripId = String(trip.id);
+        activeTab = "trips";
+        render();
+        updateTripUrl(selectedTripId);
+        document.getElementById("trip-detail-title").textContent = text(trip.name, "이름 없는 여행");
+        document.getElementById("trip-detail-meta").textContent = [trip.start && trip.end ? text(trip.start) + " ~ " + text(trip.end) : "날짜 미지정", `${tripDays(trip).length}일 · 장소 ${tripPlaceCount(trip)}곳`].join(" · ");
+        const summary = document.getElementById("trip-detail-summary");
+        summary.textContent = text(trip.summary);
+        summary.hidden = !summary.textContent;
+        const route = document.getElementById("trip-detail-route");
+        route.replaceChildren();
+        for (const [label, place] of [["출발", trip.origin], ["도착", trip.destination]]) {
+          if (place && typeof place.name === "string") route.append(node("span", "", `${label} · ${place.name}`));
+        }
+        route.hidden = !route.children.length;
+        tripMemo.value = text(trip.memo);
+        tripError.hidden = true;
+        tripSaveStatus.textContent = "";
+        renderTripPlaces(trip);
+        const tipsBox = document.getElementById("trip-detail-tips");
+        const tipList = document.getElementById("trip-detail-tip-list");
+        tipList.replaceChildren();
+        (Array.isArray(trip.tips) ? trip.tips : []).filter((tip) => typeof tip === "string" && tip).forEach((tip) => tipList.append(node("li", "", tip)));
+        tipsBox.hidden = !tipList.children.length;
+        if (!tripDialog.open) tripDialog.showModal();
+        loadTripMap();
+      } catch (error) {
+        errorBox.textContent = error.message;
+        errorBox.hidden = false;
+        updateTripUrl(null);
+      }
+    }
+    document.getElementById("trip-detail-close").addEventListener("click", closeTrip);
+    tripDialog.addEventListener("close", () => {
+      selectedTripId = null;
+      clearTripMap();
+      detailPlaces = [];
+      tripMemo.value = "";
+      tripDaysBox.replaceChildren();
+      updateTripUrl(null);
+    });
+    tripMapRetry.addEventListener("click", loadTripMap);
+    tripForm.addEventListener("input", (event) => {
+      tripSaveStatus.textContent = "변경한 메모가 아직 저장되지 않았어요.";
+      if (event.target.classList.contains("trip-place-note")) {
+        // The same place on multiple days shares one memo; keep all its editors in sync.
+        tripDaysBox.querySelectorAll(".trip-place-note").forEach((input) => {
+          if (input !== event.target && input.dataset.noteKey === event.target.dataset.noteKey) input.value = event.target.value;
+        });
+      }
+    });
+    tripForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      tripError.hidden = true;
+      try {
+        if (!selectedTripId) throw new Error("저장할 여행을 먼저 선택해주세요.");
+        const trip = ownedTrip(selectedTripId);
+        if (tripMemo.value.length > 10000) throw new Error("여행 전체 메모는 10,000자까지 저장할 수 있어요.");
+        const notes = Object.assign(Object.create(null), trip.placeNotes && typeof trip.placeNotes === "object" && !Array.isArray(trip.placeNotes) ? trip.placeNotes : {});
+        tripDaysBox.querySelectorAll(".trip-place-note").forEach((input) => {
+          if (input.value.length > 2000) throw new Error("장소별 메모는 2,000자까지 저장할 수 있어요.");
+          notes[input.dataset.noteKey] = input.value;
+        });
+        const list = readList(KEYS.trips);
+        const index = list.findIndex((item) => item && String(item.id) === selectedTripId && item.ownerEmail === getCurrentUser()?.email);
+        if (index < 0) throw new Error("여행이 삭제되었거나 계정이 변경되었습니다. 다시 열어주세요.");
+        list[index] = Object.assign({}, list[index], { memo: tripMemo.value, placeNotes: notes, updatedAt: new Date().toISOString() });
+        writeList(KEYS.trips, list);
+        render();
+        tripSaveStatus.textContent = "여행 메모와 장소별 메모를 저장했어요.";
+      } catch (error) { showTripError(error.message); }
+    });
+    window.addEventListener("storage", (event) => {
+      if (event.key !== KEYS.trips && event.key !== null) return;
+      if (selectedTripId) {
+        try { ownedTrip(selectedTripId); }
+        catch { closeTrip(); }
+      }
+      render();
+    });
+
     // ---------- 항목 삭제 ----------
     function guard(action) {
       try {
@@ -357,7 +621,10 @@
       const user = getCurrentUser();
       if (!user || trip.ownerEmail !== user.email) return;
       if (!window.confirm("'" + (trip.name || "이름 없는 여행") + "' 여행을 삭제할까요?")) return;
-      guard(() => writeList(KEYS.trips, readList(KEYS.trips).filter((item) => !(item && item.id === trip.id))));
+      guard(function () {
+        writeList(KEYS.trips, readList(KEYS.trips).filter((item) => !(item && item.id === trip.id && item.ownerEmail === user.email)));
+        if (selectedTripId === String(trip.id)) closeTrip();
+      });
     }
 
     function removePost(post) {
@@ -488,6 +755,8 @@
     });
 
     render();
+    const requestedTrip = new URLSearchParams(window.location.search).get("trip");
+    if (requestedTrip) openTrip(requestedTrip);
   }
 
   initMyPage();

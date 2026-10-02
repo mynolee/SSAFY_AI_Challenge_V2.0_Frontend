@@ -31,6 +31,8 @@
     const stepText = page.querySelector("#step-text");
     const summaryValue = page.querySelector("#summary-value");
     const summaryCount = page.querySelector("#summary-count");
+    const regionMapLink = page.querySelector("#region-map-link");
+    const regionMapLabel = page.querySelector("#region-map-label");
     const STATE_KEY = "pado-fishing-session";
 
     let selectedRegionId = "";
@@ -45,9 +47,15 @@
 
     function saveState() {
       if (restoring) return;
+      const selection = { regionId: selectedRegionId, city: selectedCity };
       try {
-        sessionStorage.setItem(STATE_KEY, JSON.stringify({ regionId: selectedRegionId, city: selectedCity }));
+        sessionStorage.setItem(STATE_KEY, JSON.stringify(selection));
       } catch (error) { /* 세션 저장이 불가능해도 지도 선택은 계속 사용한다. */ }
+      regionMapLink.hidden = !selectedRegionId;
+      regionMapLabel.textContent = selectedRegionId
+        ? `${regionData[selectedRegionId].label}${selectedCity ? ` · ${selectedCity}` : ""} 지도 보기`
+        : "선택한 지역 지도 보기";
+      window.dispatchEvent(new CustomEvent("kkuni:region-change", { detail: selection }));
     }
 
     function hideTooltip() {
@@ -158,8 +166,336 @@
       }
     } catch (error) { /* 손상된 저장 상태는 무시한다. */ }
     finally { restoring = false; }
+    saveState();
+    return () => ({ regionId: selectedRegionId, city: selectedCity });
+  }
+
+  function initHomeWeather(getSelection) {
+    const openButton = document.getElementById("weather-open");
+    const dialog = document.getElementById("weather-dialog");
+    const dateLabel = document.getElementById("weather-date");
+    const locationLabel = document.getElementById("weather-location");
+    const currentLabel = document.getElementById("weather-current");
+    const icon = document.getElementById("weather-icon");
+    const status = document.getElementById("weather-status");
+    const content = document.getElementById("weather-content");
+    const retryButton = document.getElementById("weather-retry");
+    const sourceLabel = document.getElementById("weather-source");
+    const warningLabel = document.getElementById("weather-warning");
+    const overview = document.getElementById("weather-overview");
+    const hoursBody = document.getElementById("weather-hours");
+    const extras = document.getElementById("weather-extras");
+    const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
+      timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit", weekday: "short",
+    });
+    const koreanParts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hourCycle: "h23",
+    });
+    let requestVersion = 0;
+    let abortController = null;
+    let selectedLocation = "";
+    let currentDate = "";
+    let weather = null;
+    let lastRefresh = 0;
+    let loading = false;
+
+    function todayParts() {
+      const parts = Object.fromEntries(koreanParts.formatToParts(new Date()).map((part) => [part.type, part.value]));
+      return { date: `${parts.year}-${parts.month}-${parts.day}`, hour: Number(parts.hour) };
+    }
+
+    function refreshDate() {
+      const parts = todayParts();
+      currentDate = parts.date;
+      dateLabel.dateTime = parts.date;
+      dateLabel.textContent = dateFormatter.format(new Date());
+      document.getElementById("weather-dialog-date").textContent = `${dateLabel.textContent} · 오늘`;
+      return parts;
+    }
+
+    function hasValue(value) {
+      return value !== null && value !== undefined && value !== "" && (typeof value !== "number" || Number.isFinite(value));
+    }
+
+    function metric(value, unit = "") {
+      if (!hasValue(value)) return "—";
+      const number = Number(value);
+      return `${Number.isFinite(number) ? Math.round(number * 10) / 10 : value}${unit}`;
+    }
+
+    function precipitation(value) {
+      if (!hasValue(value)) return "—";
+      const number = Number(value);
+      return Number.isFinite(number) ? `${number} mm` : String(value);
+    }
+
+    function conditions(item) {
+      const precipitationLabels = { 1: "비", 2: "비·눈", 3: "눈", 4: "소나기", 5: "빗방울", 6: "빗방울·눈날림", 7: "눈날림" };
+      const skyLabels = { 1: "맑음", 3: "구름 많음", 4: "흐림" };
+      if (precipitationLabels[item.precipitationType]) return precipitationLabels[item.precipitationType];
+      if (skyLabels[item.sky]) return skyLabels[item.sky];
+      return hasValue(item.sky) ? String(item.sky) : "—";
+    }
+
+    function conditionIcon(item) {
+      const label = conditions(item);
+      if (label.includes("눈")) return "❄";
+      if (/비|소나기|빗방울/.test(label)) return "☂";
+      if (/흐림|구름/.test(label)) return "☁";
+      return label === "맑음" ? "☼" : "◷";
+    }
+
+    function updateButtonLabel() {
+      openButton.setAttribute("aria-label", `${dateLabel.textContent}, ${locationLabel.textContent}, ${currentLabel.textContent}. 시간별 날씨 보기`);
+    }
+
+    function showStatus(message, canRetry = false) {
+      status.textContent = message;
+      status.hidden = false;
+      content.hidden = true;
+      retryButton.hidden = !canRetry;
+    }
+
+    function summaryCard(label, value, note) {
+      const card = document.createElement("div");
+      card.className = "weather-summary-card";
+      const heading = document.createElement("span");
+      heading.className = "weather-summary-label";
+      heading.textContent = label;
+      const strong = document.createElement("strong");
+      strong.textContent = value;
+      card.append(heading, strong);
+      if (note) {
+        const hint = document.createElement("span");
+        hint.className = "weather-summary-note";
+        hint.textContent = note;
+        card.append(hint);
+      }
+      return card;
+    }
+
+    function formatAlertTime(value) {
+      const raw = String(value || "");
+      const compact = raw.match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})$/);
+      if (compact) return `${compact[1]}.${compact[2]}.${compact[3]} ${compact[4]}:${compact[5]} (KST)`;
+      const parsed = new Date(raw);
+      if (!raw || Number.isNaN(parsed.getTime())) return "시각 미제공";
+      return new Intl.DateTimeFormat("ko-KR", {
+        timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+      }).format(parsed) + " (KST)";
+    }
+
+    function renderAlerts(alertStatus) {
+      const section = document.getElementById("weather-alerts");
+      section.replaceChildren();
+      const state = ["ok", "none", "no_data", "unavailable"].includes(alertStatus && alertStatus.state) ? alertStatus.state : "unavailable";
+      section.dataset.state = state;
+      const head = document.createElement("div");
+      head.className = "weather-alert-head";
+      const heading = document.createElement("h3");
+      heading.id = "weather-alert-title";
+      heading.textContent = "전국 기상특보 현황";
+      const badge = document.createElement("span");
+      badge.className = "weather-alert-badge";
+      badge.textContent = { ok: "특보 현황", none: "특보 없음", no_data: "자료 없음", unavailable: "조회 실패" }[state];
+      head.append(heading, badge);
+      section.append(head);
+      const scope = document.createElement("p");
+      scope.className = "weather-alert-scope";
+      scope.textContent = "기상청 원문 · 아래 전국 특보에서 해당 지역·해역을 확인하세요.";
+      section.append(scope);
+
+      if (state === "ok" || state === "none") {
+        const times = document.createElement("p");
+        times.className = "weather-alert-times";
+        times.textContent = `발표 ${formatAlertTime(alertStatus.issuedAt)} · 현황 기준 ${formatAlertTime(alertStatus.effectiveAt)}`;
+        section.append(times);
+        const parts = [
+          ["기상특보", state === "none" ? "기상청 최신 특보 현황은 ‘없음’입니다." : alertStatus.active],
+          ["예비특보", alertStatus.preliminary],
+          ["참고사항", alertStatus.reference],
+        ];
+        parts.forEach(([label, value]) => {
+          const block = document.createElement("div");
+          block.className = "weather-alert-part";
+          const title = document.createElement("h4");
+          title.textContent = label;
+          const text = document.createElement("p");
+          text.className = "weather-alert-text";
+          text.textContent = typeof value === "string" && value.trim() ? value.trim() : "내용 미제공";
+          block.append(title, text);
+          section.append(block);
+        });
+      } else {
+        const message = document.createElement("p");
+        message.className = "weather-alert-message";
+        message.textContent = state === "no_data"
+          ? "기상청이 제공한 최신 특보 현황 자료가 없어 현재 특보를 확인할 수 없어요."
+          : "기상특보 현황을 불러오지 못했어요. 다시 확인하거나 기상청에서 확인해주세요.";
+        section.append(message);
+      }
+      const official = document.createElement("a");
+      official.className = "weather-alert-link";
+      official.href = "https://www.weather.go.kr/w/weather/warning/status.do";
+      official.target = "_blank";
+      official.rel = "noopener noreferrer";
+      official.textContent = "기상청 특보 현황 확인 ↗";
+      section.append(official);
+    }
+
+    function renderWeather(data) {
+      const today = refreshDate();
+      const hours = (Array.isArray(data.hours) ? data.hours : []).filter((hour) => hour.date === today.date);
+      const current = data.current || {};
+      const currentConditions = current;
+      const currentAvailable = [current.temperature, current.humidity, current.windSpeed, current.precipitation].some(hasValue);
+      const state = conditions(currentConditions);
+      currentLabel.textContent = currentAvailable
+        ? `${metric(current.temperature, "°")}${state === "—" ? "" : ` · ${state}`}`
+        : "현재 관측 없음";
+      icon.textContent = conditionIcon(currentConditions);
+      updateButtonLabel();
+
+      if (!currentAvailable && !hours.length) {
+        showStatus("이 지역의 오늘 날씨 자료를 아직 받지 못했어요. 잠시 후 다시 확인해주세요.", true);
+        return;
+      }
+
+      overview.replaceChildren(
+        summaryCard("현재 기온", metric(current.temperature, "°C"), state === "—" ? "하늘 상태 미제공" : state),
+        summaryCard("현재 습도", metric(current.humidity, "%"), "최근 관측 기준"),
+        summaryCard("현재 풍속", metric(current.windSpeed, " m/s"), `강수량 ${precipitation(current.precipitation)}`),
+      );
+      renderAlerts(data.extras && data.extras.alertStatus);
+
+      const temperatures = hours.map((hour) => hour.temperature).filter(hasValue).map(Number).filter(Number.isFinite);
+      if (temperatures.length) {
+        overview.append(summaryCard("오늘 예보 기온", `${metric(Math.min(...temperatures), "°")} ~ ${metric(Math.max(...temperatures), "°")}`, "제공된 시간대 최저·최고"));
+      }
+
+      const rows = Array.from({ length: 24 }, (_, hour) => {
+        const time = `${String(hour).padStart(2, "0")}:00`;
+        const item = hours.find((entry) => String(entry.time) === time);
+        const row = document.createElement("tr");
+        if (hour === today.hour) row.className = "current-hour";
+        const heading = document.createElement("th");
+        heading.scope = "row";
+        heading.textContent = `${time}${hour === today.hour ? " · 지금" : ""}`;
+        row.append(heading);
+        if (!item) {
+          const empty = document.createElement("td");
+          empty.colSpan = 6;
+          empty.className = "weather-hour-empty";
+          empty.textContent = "예보 미제공";
+          row.append(empty);
+          return row;
+        }
+        [conditions(item), metric(item.temperature, "°C"), precipitation(item.precipitation), metric(item.precipitationProbability, "%"), metric(item.humidity, "%"), metric(item.windSpeed, " m/s")].forEach((value) => {
+          const cell = document.createElement("td");
+          cell.textContent = value;
+          row.append(cell);
+        });
+        return row;
+      });
+      hoursBody.replaceChildren(...rows);
+
+      extras.replaceChildren();
+      const extraLabels = { sunrise: "일출", sunset: "일몰", moonrise: "월출", moonset: "월몰", lunarDate: "음력" };
+      if (data.extras && typeof data.extras === "object") {
+        Object.entries(extraLabels).forEach(([key, label]) => {
+          if (hasValue(data.extras[key]) && typeof data.extras[key] !== "object") {
+            extras.append(summaryCard(label, String(data.extras[key])));
+          }
+        });
+        if (hasValue(data.extras.astronomyLocation) && extras.children.length) {
+          const caption = document.createElement("p");
+          caption.className = "weather-extra-caption";
+          caption.textContent = `출몰시각은 인근 기준 지역 (${data.extras.astronomyLocation}) 자료입니다.`;
+          extras.append(caption);
+        }
+      }
+      extras.hidden = !extras.children.length;
+      const sources = (Array.isArray(data.sources) ? data.sources : []).map((source) => {
+        return typeof source === "string" ? source : source && (source.name || source.label);
+      }).filter(Boolean);
+      const observed = hasValue(current.observedAt) ? ` · 관측 ${current.observedAt}` : "";
+      sourceLabel.textContent = `${sources.length ? sources.join(" · ") : "기상청 공공데이터"}${observed}${hasValue(data.issuedAt) ? ` · 예보 발표 ${data.issuedAt}` : ""}`;
+      const warnings = (Array.isArray(data.warnings) ? data.warnings : []).filter((item) => typeof item === "string");
+      if (!currentAvailable) warnings.unshift("현재 관측 자료가 없어 시간별 예보를 표시합니다.");
+      if (!hours.length) warnings.unshift("오늘의 시간별 예보가 아직 제공되지 않았습니다.");
+      warningLabel.textContent = warnings.join(" ");
+      warningLabel.hidden = !warnings.length;
+      status.hidden = true;
+      content.hidden = false;
+      retryButton.hidden = false;
+    }
+
+    async function loadWeather(selection = getSelection()) {
+      const version = ++requestVersion;
+      if (abortController) abortController.abort();
+      abortController = new AbortController();
+      loading = true;
+      lastRefresh = Date.now();
+      weather = null;
+      refreshDate();
+      selectedLocation = selection.regionId
+        ? `${regionData[selection.regionId] ? regionData[selection.regionId].label : selection.regionId}${selection.city ? ` · ${selection.city}` : ""}`
+        : "";
+      locationLabel.textContent = selectedLocation || "지역을 선택해주세요";
+      document.getElementById("weather-dialog-title").textContent = selectedLocation ? `${selectedLocation}의 오늘 날씨` : "지역별 시간대 날씨";
+      icon.textContent = "◷";
+      currentLabel.textContent = selection.regionId ? "날씨 확인 중" : "오늘의 날씨";
+      updateButtonLabel();
+      if (!selection.regionId) {
+        loading = false;
+        showStatus("지도에서 지역을 선택하면 현재 날씨와 오늘의 시간별 예보를 확인할 수 있어요.");
+        return;
+      }
+      showStatus(`${selectedLocation}의 날씨를 확인하고 있어요.`);
+      try {
+        const coordinates = await Kkuni.resolveRegion(selection);
+        if (version !== requestVersion) return;
+        const params = new URLSearchParams({ lat: String(coordinates.lat), lng: String(coordinates.lng) });
+        const response = await fetch(`/api/weather?${params}`, { signal: abortController.signal });
+        if (!response.ok) throw new Error("날씨 정보를 받지 못했습니다.");
+        const data = await response.json();
+        if (version !== requestVersion) return;
+        if (data.error) throw new Error("날씨 정보를 받지 못했습니다.");
+        weather = data;
+        lastRefresh = Date.now();
+        renderWeather(data);
+      } catch (error) {
+        if (version !== requestVersion || error.name === "AbortError") return;
+        currentLabel.textContent = "날씨 확인 필요";
+        updateButtonLabel();
+        showStatus("날씨 정보를 불러오지 못했어요. 연결 상태를 확인하고 다시 시도해주세요.", true);
+      } finally {
+        if (version === requestVersion) loading = false;
+      }
+    }
+
+    openButton.addEventListener("click", () => {
+      if (!dialog.open) dialog.showModal();
+      if (weather) renderWeather(weather);
+      if (!loading && getSelection().regionId && Date.now() - lastRefresh > 10 * 60 * 1000) loadWeather();
+    });
+    document.getElementById("weather-close").addEventListener("click", () => dialog.close());
+    dialog.addEventListener("click", (event) => {
+      if (event.target !== dialog) return;
+      const bounds = dialog.getBoundingClientRect();
+      if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) dialog.close();
+    });
+    retryButton.addEventListener("click", () => loadWeather());
+    window.addEventListener("kkuni:region-change", (event) => loadWeather(event.detail || getSelection()));
+    window.setInterval(() => {
+      if (todayParts().date !== currentDate) loadWeather();
+      else if (!loading && getSelection().regionId && Date.now() - lastRefresh > 10 * 60 * 1000) loadWeather();
+      else if (dialog.open && weather) renderWeather(weather);
+    }, 60 * 1000);
+    loadWeather();
   }
 
   const page = document.getElementById("region-page");
-  initRegionSelection(page);
+  const getSelection = initRegionSelection(page);
+  initHomeWeather(getSelection);
 })();

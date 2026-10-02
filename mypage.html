@@ -167,6 +167,39 @@
       </article>
     </template>
 
+    <!-- 저장한 여행 상세·메모: 기존 마이페이지 안에서 열립니다. -->
+    <dialog class="kkuni-dialog trip-detail-dialog" id="trip-detail-dialog" aria-labelledby="trip-detail-title">
+      <form id="trip-detail-form" novalidate>
+        <div class="dialog-head">
+          <div><p class="trip-detail-eyebrow">저장한 여행</p><h2 id="trip-detail-title">여행 상세</h2></div>
+          <button class="dialog-close" id="trip-detail-close" type="button">닫기</button>
+        </div>
+        <p class="trip-detail-meta" id="trip-detail-meta"></p>
+        <p class="trip-detail-summary" id="trip-detail-summary" hidden></p>
+        <div class="trip-detail-route" id="trip-detail-route" hidden></div>
+        <section class="trip-detail-map-section" aria-label="여행 장소 지도">
+          <div class="trip-map-head"><h3>장소 한눈에 보기</h3><button class="item-action" id="trip-map-retry" type="button" hidden>지도 다시 불러오기</button></div>
+          <p class="trip-detail-map-status" id="trip-detail-map-status" role="status"></p>
+          <div class="trip-detail-map" id="trip-detail-map" aria-label="저장한 여행의 카카오 지도"></div>
+          <p class="trip-map-caption">마커를 누르면 해당 장소와 메모로 이동합니다. 숙박·음식점은 서로 다른 아이콘으로 표시돼요.</p>
+        </section>
+        <section class="trip-memo-section">
+          <div class="form-field">
+            <label for="trip-detail-memo">여행 전체 메모</label>
+            <textarea id="trip-detail-memo" maxlength="10000" rows="4" placeholder="준비물, 예약 정보, 여행에서 기억할 내용을 적어보세요."></textarea>
+            <span class="trip-note-help">최대 10,000자 · 메모 저장을 누르면 이 브라우저에 저장됩니다.</span>
+          </div>
+        </section>
+        <div class="trip-detail-days" id="trip-detail-days"></div>
+        <section class="trip-detail-tips" id="trip-detail-tips" hidden><h3>여행 참고사항</h3><ul id="trip-detail-tip-list"></ul></section>
+        <p class="form-error" id="trip-detail-error" role="alert" hidden></p>
+        <div class="trip-detail-footer">
+          <p id="trip-detail-save-status" role="status"></p>
+          <button class="primary-button" id="trip-detail-save" type="submit">메모 저장</button>
+        </div>
+      </form>
+    </dialog>
+
     <!-- 회원 탈퇴 -->
     <dialog class="kkuni-dialog" id="withdraw-dialog" aria-labelledby="withdraw-title">
       <form id="withdraw-form" method="dialog" novalidate>

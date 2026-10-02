@@ -12,6 +12,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/map.css" />
     <script src="js/session.js" defer></script>
     <script src="js/map.js" defer></script>
   </head>
@@ -37,13 +38,9 @@
           </nav>
 
           <div class="header-actions">
-            <div
-              class="weather-chip"
-              aria-label="떠나기 좋은 하루, 디자인 시안"
-            >
-              <span class="weather-icon" aria-hidden="true">☼</span>
-              <span class="weather-text">떠나기 좋은 하루</span>
-              <span class="weather-note">디자인 시안</span>
+            <div class="weather-chip" aria-label="선택한 지역">
+              <span class="weather-icon" aria-hidden="true">⌖</span>
+              <span class="weather-text" id="header-region">지역 확인 중</span>
             </div>
             <a class="login-link" href="login.html">
               <svg
@@ -66,25 +63,75 @@
         </div>
       </header>
 
-      <div id="map" style="width: 100%; height: 500px"></div>
-      <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=515c1a96e7a6953cfae1f5f02c972a2e"></script>
-      <script>
-        const map = new kakao.maps.Map(document.getElementById("map"), {
-          center: new kakao.maps.LatLng(33.450701, 126.570667),
-          level: 5,
-        });
-      </script>
       <div class="app-shell" id="map-page">
         <main class="main-stage">
-          <section class="page-placeholder" aria-labelledby="map-page-title">
-            <p class="page-eyebrow">MAP</p>
-            <h2 id="map-page-title">지도 탐색</h2>
-            <p>지도 탐색 화면을 준비 중입니다.</p>
+          <section class="map-page-heading" aria-labelledby="map-page-title">
+            <div>
+              <p class="page-eyebrow">FIND YOUR NEXT FISHING SPOT</p>
+              <h1 id="map-page-title">오늘의 포인트를 찾아볼까요?</h1>
+              <p><strong id="selected-region">선택한 지역 확인 중</strong>에서 낚시와 여행을 함께 탐색하세요.</p>
+            </div>
+            <a href="index.html" class="map-button map-button-light">지역 다시 선택</a>
+          </section>
+
+          <section class="map-explorer" aria-label="카카오 지도 탐색">
+            <div class="map-toolbar">
+              <fieldset class="map-filters">
+                <legend class="map-sr-only">지도에 표시할 장소 종류</legend>
+                <label class="map-filter"><input type="checkbox" name="map-category" value="point" checked /><span class="filter-dot point-dot"></span>낚시 포인트</label>
+                <label class="map-filter"><input type="checkbox" name="map-category" value="store" checked /><span class="filter-dot store-dot"></span>낚시용품</label>
+                <label class="map-filter"><input type="checkbox" name="map-category" value="attraction" /><span class="filter-dot trip-dot"></span>주변 명소</label>
+                <label class="map-filter"><input type="checkbox" name="map-category" value="restaurant" /><span class="filter-dot trip-dot"></span>음식점</label>
+                <label class="map-filter"><input type="checkbox" name="map-category" value="lodging" /><span class="filter-dot trip-dot"></span>숙박</label>
+              </fieldset>
+              <button class="map-button map-button-primary" type="button" id="add-marker" aria-pressed="false" disabled>＋ 내 마커 만들기</button>
+            </div>
+            <div class="map-workspace">
+              <aside class="map-sidebar" aria-label="검색한 장소 목록">
+                <div class="map-sidebar-heading"><h2>이 지도에서 발견한 장소</h2><p>카카오맵 검색 · 검색 결과 15개씩 확인</p></div>
+                <p class="map-search-status" id="map-search-status" role="status">지도를 준비하고 있어요.</p>
+                <section class="map-place-detail" id="place-detail" aria-label="선택한 장소" hidden></section>
+                <div class="map-result-list" id="map-results"></div>
+                <p class="map-list-note">낚시 포인트·용품은 카카오맵의 업종 분류로 확인한 장소만 표시합니다. 낚시 가능 여부와 현장 출입 조건을 확인하세요.</p>
+              </aside>
+              <div class="map-canvas-wrap">
+                <div id="map" class="map-canvas" role="region" aria-label="선택 지역의 카카오 지도"></div>
+                <div class="map-loading" id="map-loading" role="status"><span class="map-spinner" aria-hidden="true"></span><p>카카오 지도를 불러오는 중이에요.</p></div>
+                <div class="map-load-error" id="map-load-error" role="alert" hidden><h2>지도를 불러오지 못했어요</h2><p id="map-load-error-message"></p><button type="button" class="map-button map-button-primary" id="map-retry">다시 시도</button></div>
+                <div class="map-selection-banner" id="marker-mode-notice" role="status" hidden>지도에서 원하는 위치를 클릭하세요. 이름과 마커 이미지를 선택할 수 있어요.</div>
+                <div class="map-floating-actions">
+                  <button type="button" class="map-button map-button-light" id="map-recenter" disabled>⌖ 선택 지역으로</button>
+                  <button type="button" class="map-button map-button-light" id="map-refresh" disabled>이 지도에서 다시 찾기</button>
+                  <button type="button" class="map-button map-button-light" id="add-marker-coordinates" disabled>좌표로 등록</button>
+                </div>
+                <p class="map-canvas-caption" id="map-center-caption">지도를 이동하면 주변 장소를 다시 찾습니다.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="marine-panel" aria-labelledby="marine-title">
+            <div class="marine-heading"><div><p class="page-eyebrow">OCEAN CONDITIONS</p><h2 id="marine-title">바다를 살피고, 출발하세요</h2><p id="marine-station">선택한 지역의 가까운 조위관측소를 조회합니다.</p></div><button type="button" class="map-button map-button-light" id="marine-refresh" disabled>물때 다시 조회</button></div>
+            <p id="marine-status" class="marine-status" role="status">공공 해양 데이터를 준비하고 있어요.</p>
+            <div class="marine-cards" id="marine-cards"></div>
+            <ul class="marine-warnings" id="marine-warnings" hidden></ul>
+            <div class="marine-sources" id="marine-sources"></div>
           </section>
         </main>
       </div>
     </div>
-    <button type="button" onclick="showTide()">군산 물때 조회</button>
-    <pre id="tide-result"></pre>
+
+    <dialog class="marker-dialog" id="marker-dialog" aria-labelledby="marker-dialog-title">
+      <form id="marker-form">
+        <div class="marker-dialog-heading"><div><p class="page-eyebrow">MY FISHING MAP</p><h2 id="marker-dialog-title">나만의 장소 등록</h2></div><button type="button" class="map-icon-button" id="marker-dialog-close" aria-label="장소 등록 닫기">×</button></div>
+        <p class="marker-save-notice" id="marker-save-notice"></p>
+        <label class="marker-field">장소 이름<input id="marker-name" name="name" type="text" maxlength="60" placeholder="예: 다시 찾고 싶은 방파제" required /></label>
+        <div class="marker-form-row"><label class="marker-field">장소 종류<select id="marker-category" name="category"><option value="point">낚시 포인트</option><option value="store">낚시용품점</option></select></label><label class="marker-field">공개 설정<select id="marker-visibility" name="visibility"><option value="private">나만 보기</option><option value="public">공개 (이 브라우저)</option></select></label></div>
+        <div class="marker-form-row"><label class="marker-field">위도<input id="marker-lat" name="lat" type="number" min="-90" max="90" step="any" required /></label><label class="marker-field">경도<input id="marker-lng" name="lng" type="number" min="-180" max="180" step="any" required /></label></div>
+        <label class="marker-field">장소 메모<textarea id="marker-desc" name="desc" rows="2" maxlength="300" placeholder="접근 방법이나 기억할 내용을 남겨보세요."></textarea></label>
+        <fieldset class="marker-image-choices"><legend>마커 이미지 선택</legend><label><input type="radio" name="icon" value="point" checked /><img src="img/icons/marker-point.svg" alt="파란 물고기 마커" /><span>물고기</span></label><label><input type="radio" name="icon" value="store" /><img src="img/icons/marker-store.svg" alt="주황 낚시용품 마커" /><span>낚시용품</span></label><label><input type="radio" name="icon" value="trip" /><img src="img/icons/marker-trip.svg" alt="초록 여행 마커" /><span>여행</span></label><label><input type="radio" name="icon" value="lodging" /><img src="img/icons/marker-lodging.svg" alt="청록 숙소 마커" /><span>숙소</span></label><label><input type="radio" name="icon" value="restaurant" /><img src="img/icons/marker-restaurant.svg" alt="주황 음식점 마커" /><span>음식점</span></label></fieldset>
+        <p id="marker-form-error" class="map-form-error" role="alert" hidden></p>
+        <div class="marker-dialog-footer"><button type="button" class="map-button map-button-light" id="marker-cancel">취소</button><button type="submit" class="map-button map-button-primary" id="marker-submit">마커 저장</button></div>
+      </form>
+    </dialog>
   </body>
 </html>
