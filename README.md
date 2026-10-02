@@ -5,9 +5,9 @@
 ## 구성
 
 - `index.html`: 낚시꾸니 헤더와 여행 지역 선택 화면. 전국 17개 시도 지도는 HTML 안에 SVG 마크업으로 포함했습니다.
-- `낚시꾸니.png`: 헤더 로고
-- `style.css`: 헤더, 지도, 지역 목록 스타일
-- `script.js`: 지도와 시·군 선택, 선택 상태 복원
+- `img/낚시꾸니.png`: 헤더 로고
+- `css/style.css`: 헤더, 지도, 지역 목록 스타일
+- `js/script.js`: 지도와 시·군 선택, 선택 상태 복원
 
 원본의 Python 서버, 데이터, 채팅·업로드 화면과 코드는 포함하지 않았습니다. 지도 경계 데이터의 원본은 [korea-maps](https://github.com/swcho/korea-maps)입니다.
 
