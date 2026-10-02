@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/login.css"/>
     <script src="js/login.js" defer></script>
   </head>
   <body>
@@ -45,14 +46,169 @@
       </header>
 
       <div class="app-shell" id="login-page">
-        <main class="main-stage">
-          <section class="page-placeholder" aria-labelledby="login-page-title">
-            <p class="page-eyebrow">LOGIN</p>
-            <h2 id="login-page-title">로그인</h2>
-            <p>로그인 화면을 준비 중입니다.</p>
+
+        <main class="login-layout">
+          <!--왼쪽 캐릭터와 소개 문구-->
+          <section class="login-promo">
+            <p class="login-promo-badge">낚시의 모든것 낚시꾸니</p>
+
+            <img class="login-mascot"
+              src="img/icons/03-낚시꾸니.png"
+              alt="물고기를 안고 있는 낚시꾸니"
+            />
+            <h2 id="login-promo-title">
+              낚시의 설렘에,<br/>
+              여행을 더하세요.
+            </h2>
           </section>
+
+          <section class="login-card">
+            <p class ="login-eyebrow">Welcome to 낚시꾸니</p>
+
+            <h1 id="login-title">다시 만나서 반가워요!</h1>
+            <p class="login-description">
+              로그인하고 저장한 여행을 이어가세요.
+            </p>
+            <form id="login-form" method="post">
+              <div class="login-field">
+                <label for="login-email">이메일</label>
+                <input
+                  type="email"
+                  id="login-email"
+                  name="email"
+                  placeholder="kkuni@example.com"
+                  autocomplete="username"
+                  required
+                />
+              </div>
+
+              <div class="login-field">
+                <label for="login-password">비밀번호</label>
+                <input
+                  type="password"
+                  id="login-password"
+                  name="password"
+                  placeholder="비밀번호를 입력해주세요"
+                  autocomplete="current-password"
+                  required
+                />
+              </div>
+
+              <button
+                class="login-submit"
+                id="login-submit"
+                type="submit"
+              >
+                로그인
+                <span aria-hidden="true">→</span>
+              </button>
+            </form>
+
+            <hr class="login-divider" />
+
+            <button class="login-demo" id="demo-login" type="button">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="8" r="3" />
+                <path d="M5.5 19v-2a6.5 6.5 0 0 1 13 0v2" />
+              </svg>
+              데모 계정으로 시작하기
+            </button>
+
+            <p class="login-signup">
+              아직 꾸니가 아니신가요?
+              <button
+                class="login-signup-link"
+                id="signup-button"
+                type="button"
+              >
+                회원가입하기
+              </button>
+            </p>
+          </section>
+
         </main>
+
       </div>
     </div>
+    <dialog
+      class="signup-dialog"
+      id="signup-dialog"
+      aria-labelledby="signup-title"
+    >
+    <form id="signup-form" method="post">
+      <div class="signup-dialog-header">
+        <h2 id="signup-title">회원가입</h2>
+
+        <button
+          class="signup-close"
+          id="signup-close"
+          type="button"
+          aria-label="회원가입 창 닫기"
+        >
+          닫기
+        </button>
+      </div>
+
+      <div class="login-field">
+        <label for="signup-name">이름</label>
+        <input
+          id="signup-name"
+          name="name"
+          type="text"
+          autocomplete="name"
+          maxlength="20"
+          required
+          autofocus
+        />
+      </div>
+
+      <div class="login-field">
+        <label for="signup-email">이메일</label>
+        <input
+          id="signup-email"
+          name="email"
+          type="email"
+          autocomplete="email"
+          required
+        />
+      </div>
+
+      <div class="login-field">
+        <label for="signup-password">비밀번호</label>
+        <input
+          id="signup-password"
+          name="password"
+          type="password"
+          autocomplete="new-password"
+          placeholder="8자 이상 입력해주세요"
+          minlength="8"
+          required
+        />
+      </div>
+
+      <div class="login-field">
+        <label for="signup-password-confirm">비밀번호 확인</label>
+        <input
+          id="signup-password-confirm"
+          name="passwordConfirm"
+          type="password"
+          autocomplete="new-password"
+          required
+        />
+      </div>
+
+      <button class="login-submit" type="submit">
+        가입하기
+      </button>
+    </form>
+  </dialog>
   </body>
 </html>
