@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="css/main.css" />
     <link rel="stylesheet" href="css/travel.css" />
     <script src="js/session.js" defer></script>
+    <script src="js/main.js" defer></script>
     <script src="js/travel.js" defer></script>
   </head>
   <body>
@@ -33,10 +34,15 @@
           </nav>
 
           <div class="header-actions">
-            <div class="weather-chip" aria-label="선택한 여행 지역">
-              <span class="weather-icon" aria-hidden="true">⌖</span>
-              <span class="weather-text" id="travel-header-region">지역 확인 중</span>
-            </div>
+            <button class="weather-chip home-weather-chip" id="weather-open" type="button" aria-haspopup="dialog" aria-controls="weather-dialog" aria-label="오늘의 날짜와 시간별 날씨 보기">
+              <span class="weather-icon" id="weather-icon" aria-hidden="true">☼</span>
+              <span class="home-weather-label">
+                <time id="weather-date"></time>
+                <span class="weather-note" id="weather-location">지역을 선택해주세요</span>
+              </span>
+              <span class="weather-text" id="weather-current">오늘의 날씨</span>
+              <span class="weather-chevron" aria-hidden="true">⌄</span>
+            </button>
             <a class="login-link" href="login.html">
               <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3"/><path d="M5.5 19v-2a6.5 6.5 0 0 1 13 0v2"/></svg>
               <span class="login-link-text">로그인</span>
@@ -97,5 +103,39 @@
         </main>
       </div>
     </div>
+
+    <dialog class="kkuni-dialog weather-dialog" id="weather-dialog" aria-labelledby="weather-dialog-title" aria-describedby="weather-dialog-description">
+      <div class="dialog-head">
+        <div>
+          <p class="weather-eyebrow" id="weather-dialog-date">오늘의 날씨</p>
+          <h2 id="weather-dialog-title">지역별 시간대 날씨</h2>
+        </div>
+        <button class="dialog-close" id="weather-close" type="button" aria-label="날씨 창 닫기" autofocus>닫기</button>
+      </div>
+      <p class="weather-description" id="weather-dialog-description">선택한 지역의 현재 날씨와 오늘의 시간별 예보를 확인하세요.</p>
+      <div class="weather-status" id="weather-status" role="status" aria-live="polite">지도에서 지역을 선택하면 날씨를 확인할 수 있어요.</div>
+      <div id="weather-content" hidden>
+        <div class="weather-overview" id="weather-overview"></div>
+        <section class="weather-alerts" id="weather-alerts" aria-labelledby="weather-alert-title" aria-live="polite"></section>
+        <section aria-labelledby="weather-hourly-title">
+          <div class="weather-section-head">
+            <h3 id="weather-hourly-title">오늘의 시간별 날씨</h3>
+            <span>한국 표준시 · KST</span>
+          </div>
+          <div class="weather-table-wrap" tabindex="0" role="region" aria-label="시간별 날씨 표, 작은 화면에서는 옆으로 스크롤하세요">
+            <table class="weather-table">
+              <caption class="visually-hidden">선택한 지역의 오늘 시간별 기온, 하늘 상태, 강수량, 강수 확률, 습도와 풍속</caption>
+              <thead><tr><th scope="col">시간</th><th scope="col">날씨</th><th scope="col">기온</th><th scope="col">강수량</th><th scope="col">강수 확률</th><th scope="col">습도</th><th scope="col">풍속</th></tr></thead>
+              <tbody id="weather-hours"></tbody>
+            </table>
+          </div>
+          <p class="weather-hourly-note">—는 제공되지 않은 값입니다. 시간이 지난 예보는 최신 발표에 포함되지 않을 수 있어요.</p>
+        </section>
+        <div class="weather-extras" id="weather-extras" hidden></div>
+        <p class="weather-source" id="weather-source"></p>
+        <p class="weather-warning" id="weather-warning" hidden></p>
+      </div>
+      <div class="dialog-actions"><button class="soft-button" id="weather-retry" type="button" hidden>다시 확인</button></div>
+    </dialog>
   </body>
 </html>

@@ -46,6 +46,7 @@ function openPage(local = storage(), options = {}) {
   node("login-form").submitButton = node("login-submit");
   node("signup-form").fields = ["signup-name", "signup-email", "signup-password", "signup-password-confirm"].map(node);
   node("signup-form").submitButton = element("signup-submit");
+  node("reset-form").fields = ["reset-email", "reset-name", "reset-password", "reset-password-confirm"].map(node);
 
   vm.runInNewContext(source, {
     document: { getElementById: node }, localStorage: local, sessionStorage: session,
@@ -68,6 +69,14 @@ function openPage(local = storage(), options = {}) {
       node("login-email").value = email;
       node("login-password").value = password;
       await node("login-form").dispatch("submit");
+    },
+    async resetPassword(email, name, password) {
+      await node("reset-button").dispatch("click");
+      node("reset-email").value = email;
+      node("reset-name").value = name;
+      node("reset-password").value = password;
+      node("reset-password-confirm").value = password;
+      await node("reset-form").dispatch("submit");
     },
   };
 }
@@ -128,6 +137,30 @@ test("가입 확인을 취소하면 회원 정보를 저장하지 않는다", as
   const page = openPage(storage(), { confirm: false });
   await page.signup("angler@example.com");
   assert.equal(page.local.getItem("kkuni-users"), null);
+});
+
+test("비밀번호 찾기: 이메일과 이름이 맞으면 새 비밀번호로만 로그인할 수 있다", async () => {
+  const page = openPage();
+  await page.signup("angler@example.com");
+  await page.resetPassword("Angler@Example.com", "낚시꾸니", "new-password!");
+  assert(page.alerts.some(message => message.includes("재설정")));
+  assert(!page.node("reset-dialog").open);
+  assert(!page.local.getItem("kkuni-users").includes("new-password!"), "비밀번호 원문이 저장되었습니다.");
+
+  const reloaded = openPage(page.local);
+  await reloaded.login("angler@example.com", "test-password!");
+  assert.equal(reloaded.session.getItem("kkuni-current-user"), null);
+  await reloaded.login("angler@example.com", "new-password!");
+  assert.equal(reloaded.location.href, "index.html");
+});
+
+test("비밀번호 찾기: 이름이 다르면 비밀번호를 바꾸지 않는다", async () => {
+  const page = openPage();
+  await page.signup("angler@example.com");
+  const before = page.local.getItem("kkuni-users");
+  await page.resetPassword("angler@example.com", "다른이름", "new-password!");
+  assert(page.alerts.some(message => message.includes("찾을 수 없습니다")));
+  assert.equal(page.local.getItem("kkuni-users"), before);
 });
 
 test("데모 계정도 저장된 계정으로 로그인할 수 있다", async () => {

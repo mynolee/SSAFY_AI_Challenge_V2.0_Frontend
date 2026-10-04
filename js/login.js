@@ -82,6 +82,29 @@
     return user;
   }
 
+  // 비밀번호 찾기: 가입한 이메일과 이름이 모두 맞을 때만 새 salt와 해시로 바꿉니다.
+  async function resetUserPassword(email, name, password) {
+    const matches = (member) => member.email === email && member.name === name;
+    if (!loadUsers().some(matches)) {
+      throw new Error("입력한 이메일과 이름으로 가입된 계정을 찾을 수 없습니다.");
+    }
+    const salt = toHex(crypto.getRandomValues(new Uint8Array(16)));
+    const passwordHash = await hashPassword(password, salt, PASSWORD_ITERATIONS);
+
+    // 해시를 만드는 동안 계정이 바뀌었을 수 있어 최신 목록을 다시 읽습니다.
+    const users = loadUsers();
+    const index = users.findIndex(matches);
+    if (index < 0) {
+      throw new Error("입력한 이메일과 이름으로 가입된 계정을 찾을 수 없습니다.");
+    }
+    users[index] = Object.assign({}, users[index], {
+      salt, passwordHash,
+      iterations: PASSWORD_ITERATIONS,
+      updatedAt: new Date().toISOString(),
+    });
+    saveUsers(users);
+  }
+
   function initLoginPage() {
     const loginForm = document.getElementById("login-form");
     const loginEmail = document.getElementById("login-email");
@@ -99,8 +122,19 @@
     const signupPassword = document.getElementById("signup-password");
     const signupPasswordConfirm = document.getElementById("signup-password-confirm");
 
+    const resetButton = document.getElementById("reset-button");
+    const resetDialog = document.getElementById("reset-dialog");
+    const resetClose = document.getElementById("reset-close");
+    const resetForm = document.getElementById("reset-form");
+    const resetSubmit = document.getElementById("reset-submit");
+    const resetEmail = document.getElementById("reset-email");
+    const resetName = document.getElementById("reset-name");
+    const resetPassword = document.getElementById("reset-password");
+    const resetPasswordConfirm = document.getElementById("reset-password-confirm");
+
     let signupBusy = false;
     let loginBusy = false;
+    let resetBusy = false;
 
     signupButton.addEventListener("click", function () {
       signupDialog.showModal();
@@ -154,6 +188,54 @@
       } finally {
         signupBusy = false;
         signupSubmit.disabled = false;
+      }
+    });
+
+    // ---------- 비밀번호 찾기 ----------
+    resetButton.addEventListener("click", function () {
+      resetEmail.value = loginEmail.value.trim();
+      resetDialog.showModal();
+    });
+    resetClose.addEventListener("click", function () {
+      if (!resetBusy) resetDialog.close();
+    });
+    resetDialog.addEventListener("cancel", function (event) {
+      if (resetBusy) event.preventDefault();
+    });
+    resetDialog.addEventListener("close", function () {
+      resetForm.reset();
+      resetPasswordConfirm.setCustomValidity("");
+    });
+
+    function checkResetPasswords() {
+      const matches = resetPassword.value === resetPasswordConfirm.value;
+      resetPasswordConfirm.setCustomValidity(matches ? "" : "비밀번호가 일치하지 않습니다.");
+    }
+    resetPassword.addEventListener("input", checkResetPasswords);
+    resetPasswordConfirm.addEventListener("input", checkResetPasswords);
+
+    resetForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      if (resetBusy) return;
+      checkResetPasswords();
+      if (!resetForm.reportValidity()) return;
+
+      const email = resetEmail.value.trim().toLowerCase();
+      const name = resetName.value.trim();
+      resetBusy = true;
+      resetSubmit.disabled = true;
+      try {
+        await resetUserPassword(email, name, resetPassword.value);
+        resetDialog.close();
+        loginEmail.value = email;
+        loginPassword.value = "";
+        alert("비밀번호를 재설정했습니다. 새 비밀번호로 로그인해주세요.");
+        loginPassword.focus();
+      } catch (error) {
+        alert(error.message);
+      } finally {
+        resetBusy = false;
+        resetSubmit.disabled = false;
       }
     });
 

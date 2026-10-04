@@ -19,6 +19,7 @@ const endpoints = {
   fishing: ["KHOA_FCST_FISHING_V2_ENDPOINT", "https://apis.data.go.kr/1192136/fcstFishingv2"],
   rise: ["KASI_RISE_SET_ENDPOINT", "https://apis.data.go.kr/B090041/openapi/service/RiseSetInfoService"],
   lunar: ["KASI_LRSR_CLD_ENDPOINT", "https://apis.data.go.kr/B090041/openapi/service/LrsrCldInfoService"],
+  tour: ["KTO_TOUR_ENDPOINT", "https://apis.data.go.kr/B551011/KorService2"],
 };
 const sources = {
   weather: { name: "기상청 단기예보·초단기실황", url: "https://www.data.go.kr/data/15084084/openapi.do" },
@@ -28,6 +29,7 @@ const sources = {
   fishing: { name: "국립해양조사원 바다낚시지수", url: "https://www.data.go.kr/data/15142486/openapi.do" },
   rise: { name: "한국천문연구원 출몰시각", url: "https://www.data.go.kr/data/15012688/openapi.do" },
   lunar: { name: "한국천문연구원 음양력", url: "https://www.data.go.kr/data/15012679/openapi.do" },
+  tour: { name: "한국관광공사 국문관광정보서비스", url: "https://www.data.go.kr/data/15101578/openapi.do" },
 };
 // Reference station codes and coordinates verified using KHOA API responses, 2026-10-02.
 // A nearby station's measurements are never labeled as the clicked point's measurements.
@@ -54,16 +56,18 @@ class PublicApiError extends Error {
   }
 }
 const cache = new Map();
-function cached(key, ttl, request) {
-  const existing = cache.get(key);
+// 장소 사진 조회는 따로 보관해 날씨·해양 캐시를 밀어내지 않게 합니다.
+const photoCache = new Map();
+function cached(key, ttl, request, store = cache) {
+  const existing = store.get(key);
   if (existing && existing.expires > Date.now()) return existing.promise;
-  if (cache.size >= 128) cache.delete(cache.keys().next().value);
+  if (store.size >= 128) store.delete(store.keys().next().value);
   const entry = { expires: Date.now() + ttl, promise: null };
   entry.promise = Promise.resolve().then(request).catch((error) => {
-    if (cache.get(key) === entry) cache.delete(key);
+    if (store.get(key) === entry) store.delete(key);
     throw error;
   });
-  cache.set(key, entry);
+  store.set(key, entry);
   return entry.promise;
 }
 function publicKey() {
@@ -91,7 +95,7 @@ function xmlValue(xml, tag) {
   const match = xml.match(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${tag}>`));
   return match ? match[1].trim().replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&") : null;
 }
-async function publicRequest(service, operation, params = {}, { xml = false, ttl = 300000 } = {}) {
+async function publicRequest(service, operation, params = {}, { xml = false, ttl = 300000, store = cache } = {}) {
   const key = publicKey();
   const [envName, fallback] = endpoints[service];
   const base = process.env[envName] || fallback;
@@ -117,11 +121,12 @@ async function publicRequest(service, operation, params = {}, { xml = false, ttl
     } catch {
       code = xmlValue(text, "returnReasonCode") || xmlValue(text, "resultCode");
     }
-    if (String(code) !== "00" && String(code) !== "0") {
+    // 관광공사 KorService2는 정상 코드를 "0000"으로 반환합니다.
+    if (!["00", "0", "0000"].includes(String(code))) {
       throw new PublicApiError("공공데이터를 받지 못했습니다. 활용신청, 인증키 또는 제공기관 상태를 확인하세요.", 502, code);
     }
     return data;
-  });
+  }, store);
 }
 function coordinates(search) {
   const rawLat = search.get("lat");
@@ -289,6 +294,75 @@ function distanceKm(a, b) {
 function nearestStation(location) {
   const nearest = stations.map((station) => ({ ...station, distanceKm: distanceKm(location, station) })).sort((a, b) => a.distanceKm - b.distanceKm)[0];
   return nearest.distanceKm <= 35 ? { ...nearest, distanceKm: Math.round(nearest.distanceKm * 10) / 10 } : null;
+}
+// ---------- 지도 마커의 대표 이미지 ----------
+function placeNameKey(value) {
+  return String(value || "").toLowerCase().replace(/\(.*?\)|\[.*?\]/g, "").replace(/[^0-9a-z가-힣]/g, "");
+}
+// 같은 이름은 1점, 한쪽 이름이 다른 쪽에 포함되면 겹치는 길이 비율로 점수를 매깁니다.
+// "경복궁"과 "한복남 경복궁점"처럼 짧은 이름이 일부만 겹치는 다른 장소는 0.6 미만이라 제외됩니다.
+function placeNameScore(a, b) {
+  const left = placeNameKey(a);
+  const right = placeNameKey(b);
+  if (left.length < 2 || right.length < 2) return 0;
+  if (left === right) return 1;
+  const [short, long] = left.length <= right.length ? [left, right] : [right, left];
+  return long.includes(short) ? short.length / long.length : 0;
+}
+function bestPhotoMatch(list, name, isNear = () => true) {
+  return list.filter((item) => item && item.firstimage && isNear(item))
+    .map((item) => ({ item, score: placeNameScore(item.title, name) }))
+    .filter((entry) => entry.score >= 0.6)
+    .sort((a, b) => b.score - a.score)[0]?.item || null;
+}
+function secureImageUrl(value) {
+  try {
+    const url = new URL(String(value));
+    if (url.protocol === "http:" && /(^|\.)visitkorea\.or\.kr$/.test(url.hostname)) url.protocol = "https:";
+    return url.protocol === "https:" ? url.toString() : null;
+  } catch { return null; }
+}
+// 관광공사 장소 중 좌표가 가깝고 이름이 같은 곳의 대표 사진(firstimage)을 사용합니다.
+async function tourPlacePhoto(name, location) {
+  const common = { MobileOS: "ETC", MobileApp: "Kkuni", _type: "json" };
+  const options = { ttl: 24 * 3600000, store: photoCache };
+  const nearby = await publicRequest("tour", "locationBasedList2", {
+    ...common, mapX: location.lng.toFixed(6), mapY: location.lat.toFixed(6), radius: "1000", arrange: "E", numOfRows: "100",
+  }, options);
+  let match = bestPhotoMatch(items(nearby), name);
+  if (!match) {
+    const searched = await publicRequest("tour", "searchKeyword2", { ...common, keyword: name, numOfRows: "20" }, options);
+    match = bestPhotoMatch(items(searched), name, (item) => distanceKm(location, { lat: Number(item.mapy), lng: Number(item.mapx) }) <= 2);
+  }
+  const url = match && secureImageUrl(match.firstimage);
+  return url ? { url, title: match.title, source: sources.tour.name, sourceUrl: sources.tour.url } : null;
+}
+// .env에 KAKAO_REST_API_KEY가 있으면 관광공사에 없는 장소는 카카오(다음) 이미지 검색 첫 결과를 사용합니다.
+async function kakaoImagePhoto(name, address) {
+  const key = projectEnv.KAKAO_REST_API_KEY || process.env.KAKAO_REST_API_KEY;
+  if (!key) return null;
+  const query = [String(address || "").split(/\s+/).slice(0, 2).join(" "), name].filter(Boolean).join(" ");
+  return cached(JSON.stringify(["kakao-image", query]), 24 * 3600000, async () => {
+    const url = new URL("https://dapi.kakao.com/v2/search/image");
+    url.search = new URLSearchParams({ query, sort: "accuracy", size: "1" }).toString();
+    const response = await fetch(url, { headers: { Authorization: "KakaoAK " + key }, signal: AbortSignal.timeout(8000) });
+    if (!response.ok) throw new PublicApiError("이미지 검색에 실패했습니다.");
+    const first = (await response.json()).documents?.[0];
+    const image = first && secureImageUrl(first.thumbnail_url);
+    return image ? { url: image, title: name, source: "카카오 이미지 검색" + (first.display_sitename ? " · " + first.display_sitename : ""), sourceUrl: secureImageUrl(first.doc_url) } : null;
+  }, photoCache);
+}
+async function getPlacePhoto(search) {
+  const location = coordinates(search);
+  const name = String(search.get("name") || "").trim();
+  if (!name || name.length > 80) throw new PublicApiError("장소 이름을 확인하세요.", 400);
+  const address = String(search.get("address") || "").slice(0, 120);
+  let photo = null;
+  try { photo = await tourPlacePhoto(name, location); } catch { /* 관광공사 조회 실패 시 다음 방법을 시도합니다. */ }
+  if (!photo) {
+    try { photo = await kakaoImagePhoto(name, address); } catch { /* 사진이 없으면 화면에서 기본 이미지를 보여줍니다. */ }
+  }
+  return { photo };
 }
 async function fishingForecast(date) {
   // First two national 300-row pages cover today's points; later rows are following days.
@@ -590,6 +664,14 @@ async function handler(req, res) {
     } catch (error) {
       // Do not forward provider response text, request URLs, exceptions or credentials.
       json(res, error instanceof PublicApiError ? error.status : 502, { message: error instanceof PublicApiError ? error.message : "공공데이터 조회 중 오류가 발생했습니다.", ...(error.code ? { code: error.code } : {}) });
+    }
+    return;
+  }
+  if (relative === "/api/place-photo") {
+    try {
+      json(res, 200, await getPlacePhoto(parsed.searchParams));
+    } catch (error) {
+      json(res, error instanceof PublicApiError ? error.status : 502, { message: error instanceof PublicApiError ? error.message : "장소 사진을 조회하지 못했습니다." });
     }
     return;
   }

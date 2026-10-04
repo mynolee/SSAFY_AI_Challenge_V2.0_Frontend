@@ -20,6 +20,8 @@
   let customPlaces = [], customMarkers = [], marineController = null, marineSequence = 0, storageError = "";
   let marineLocation = null, marineBaseStatus = "";
   const temporaryPlaces = [];
+  const photoResults = new Map();
+  let photoRequest = 0;
 
   function element(tag, className, text) {
     const node = document.createElement(tag);
@@ -244,6 +246,51 @@
     return button;
   }
 
+  // 마커 정보창의 대표 이미지 1장: 카카오 장소는 서버에서 사진을 찾고, 없으면 장소 유형 이미지를 보여줍니다.
+  // 사용자가 등록한 마커는 비공개 이름일 수 있어 외부 조회 없이 마커 이미지를 사용합니다.
+  function placePhoto(place) {
+    const figure = element("figure");
+    const image = element("img");
+    const caption = element("figcaption");
+    function fallback(message) {
+      figure.className = "map-info-photo is-fallback";
+      image.onerror = null;
+      image.src = ICONS[iconFor(place)];
+      image.alt = "";
+      caption.textContent = message;
+    }
+    figure.append(image, caption);
+    if (place.source !== "kakao") {
+      fallback("등록된 사진이 없어요");
+      return figure;
+    }
+    const request = ++photoRequest;
+    function show(photo) {
+      if (request !== photoRequest) return;
+      if (!photo) { fallback("등록된 사진이 없어요"); return; }
+      figure.className = "map-info-photo";
+      image.onerror = () => fallback("사진을 불러오지 못했어요");
+      image.src = photo.url;
+      image.alt = place.name + " 대표 이미지";
+      caption.textContent = "사진 · " + photo.source;
+    }
+    if (photoResults.has(place.id)) {
+      show(photoResults.get(place.id));
+      return figure;
+    }
+    fallback("대표 사진을 찾는 중이에요");
+    const params = new URLSearchParams({ name: place.name, lat: String(place.lat), lng: String(place.lng), address: place.address || "" });
+    fetch("/api/place-photo?" + params, { signal: AbortSignal.timeout(15000) })
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error("photo")))
+      .then((data) => {
+        const photo = data.photo && /^https:\/\//.test(data.photo.url) ? { url: data.photo.url, source: String(data.photo.source || "") } : null;
+        photoResults.set(place.id, photo);
+        show(photo);
+      })
+      .catch(() => show(null)); // 실패한 조회는 저장하지 않아 다음 클릭에서 다시 찾습니다.
+    return figure;
+  }
+
   function selectPlace(place, marker) {
     selectedPlace = place;
     const detail = byId("place-detail");
@@ -267,7 +314,7 @@
     detail.append(actions);
     detail.hidden = false;
     const popup = element("div", "map-info-window");
-    popup.append(element("strong", "", place.name), externalLink("카카오맵에서 보기 ↗", placeLink(place)));
+    popup.append(placePhoto(place), element("strong", "", place.name), externalLink("카카오맵에서 보기 ↗", placeLink(place)));
     infoWindow.setContent(popup);
     infoWindow.setPosition(new maps.LatLng(Number(place.lat), Number(place.lng)));
     infoWindow.open(map, marker || null);
@@ -452,7 +499,6 @@
       map = new maps.Map(byId("map"), { center, level: 7 });
       infoWindow = new maps.InfoWindow({ zIndex: 10, removable: true });
       newMarker({ id: "region-center", name: selectedRegion.label + " · 선택 지역 중심", lat: selectedRegion.lat, lng: selectedRegion.lng, icon: "trip" });
-      byId("header-region").textContent = selectedRegion.label;
       byId("selected-region").textContent = selectedRegion.label;
       maps.event.addListener(map, "idle", () => {
         clearTimeout(searchTimer);
@@ -470,7 +516,6 @@
       byId("map-load-error").hidden = false;
       byId("map-load-error-message").textContent = error.message || "카카오 지도를 준비하지 못했습니다. 서버 실행 주소와 카카오 앱의 등록 도메인을 확인해 주세요.";
       byId("selected-region").textContent = "지역 정보 확인 필요";
-      byId("header-region").textContent = "지도 연결 확인";
       setStatus("지도 연결을 확인한 뒤 다시 시도해 주세요.");
       byId("marine-status").textContent = "지도를 연결한 후 선택 지역의 해양 데이터를 조회할 수 있어요.";
     } finally { initializing = false; }

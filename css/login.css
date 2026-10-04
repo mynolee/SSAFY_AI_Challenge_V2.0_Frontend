@@ -230,6 +230,20 @@
   text-decoration: underline;
 }
 
+/* 비밀번호 찾기 안내 */
+.login-help {
+  margin: 12px 0 0;
+  font-size: 12px;
+  text-align: right;
+}
+
+.reset-description {
+  margin: -8px 0 20px;
+  color: #6f86a6;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
 .login-notice {
   margin: 24px 0 0;
   color: #8198b9;

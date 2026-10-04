@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="css/main.css" />
     <link rel="stylesheet" href="css/mypage.css" />
     <script src="js/session.js" defer></script>
+    <script src="js/main.js" defer></script>
     <script src="js/mypage.js" defer></script>
   </head>
   <body>
@@ -47,11 +48,15 @@
           </nav>
 
           <div class="header-actions">
-            <div class="weather-chip" aria-label="떠나기 좋은 하루, 디자인 시안">
-              <span class="weather-icon" aria-hidden="true">☼</span>
-              <span class="weather-text">떠나기 좋은 하루</span>
-              <span class="weather-note">디자인 시안</span>
-            </div>
+            <button class="weather-chip home-weather-chip" id="weather-open" type="button" aria-haspopup="dialog" aria-controls="weather-dialog" aria-label="오늘의 날짜와 시간별 날씨 보기">
+              <span class="weather-icon" id="weather-icon" aria-hidden="true">☼</span>
+              <span class="home-weather-label">
+                <time id="weather-date"></time>
+                <span class="weather-note" id="weather-location">지역을 선택해주세요</span>
+              </span>
+              <span class="weather-text" id="weather-current">오늘의 날씨</span>
+              <span class="weather-chevron" aria-hidden="true">⌄</span>
+            </button>
             <a class="login-link active" href="login.html?next=mypage.html" aria-current="page">
               <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3"/><path d="M5.5 19v-2a6.5 6.5 0 0 1 13 0v2"/></svg>
               <span class="login-link-text">로그인</span>
@@ -141,6 +146,14 @@
                   <div><dt>작성한 게시글</dt><dd id="account-posts"></dd></div>
                 </dl>
 
+                <div class="account-row" id="account-edit-row" hidden>
+                  <div>
+                    <p class="danger-title">회원정보 수정</p>
+                    <p class="danger-copy">닉네임과 비밀번호를 변경할 수 있어요.</p>
+                  </div>
+                  <button class="soft-button" id="profile-edit-open" type="button">정보 수정</button>
+                </div>
+
                 <div class="danger-row">
                   <div>
                     <p class="danger-title">회원 탈퇴</p>
@@ -200,6 +213,38 @@
       </form>
     </dialog>
 
+    <!-- 회원정보 수정: 현재 비밀번호를 확인한 뒤 닉네임·비밀번호를 바꿉니다. -->
+    <dialog class="kkuni-dialog" id="profile-dialog" aria-labelledby="profile-title">
+      <form id="profile-form" novalidate>
+        <div class="dialog-head">
+          <h2 id="profile-title">회원정보 수정</h2>
+          <button class="dialog-close" id="profile-close" type="button">닫기</button>
+        </div>
+        <p class="withdraw-lead">이메일(<span id="profile-email"></span>)은 계정을 구분하는 값이라 변경할 수 없어요.</p>
+        <div class="form-field">
+          <label for="profile-name-input">닉네임</label>
+          <input id="profile-name-input" type="text" maxlength="20" autocomplete="nickname" required />
+        </div>
+        <div class="form-field">
+          <label for="profile-new-password">새 비밀번호 <span class="field-optional">(변경할 때만 입력)</span></label>
+          <input id="profile-new-password" type="password" minlength="8" autocomplete="new-password" placeholder="8자 이상 입력해주세요" />
+        </div>
+        <div class="form-field">
+          <label for="profile-new-password-confirm">새 비밀번호 확인</label>
+          <input id="profile-new-password-confirm" type="password" autocomplete="new-password" />
+        </div>
+        <div class="form-field">
+          <label for="profile-current-password">현재 비밀번호</label>
+          <input id="profile-current-password" type="password" autocomplete="current-password" required />
+        </div>
+        <p class="form-error" id="profile-error" role="alert" hidden></p>
+        <div class="dialog-actions">
+          <button class="soft-button" id="profile-cancel" type="button">취소</button>
+          <button class="primary-button" id="profile-submit" type="submit">저장하기</button>
+        </div>
+      </form>
+    </dialog>
+
     <!-- 회원 탈퇴 -->
     <dialog class="kkuni-dialog" id="withdraw-dialog" aria-labelledby="withdraw-title">
       <form id="withdraw-form" method="dialog" novalidate>
@@ -229,6 +274,40 @@
           <button class="danger-button solid" id="withdraw-submit" type="submit">탈퇴하기</button>
         </div>
       </form>
+    </dialog>
+
+    <dialog class="kkuni-dialog weather-dialog" id="weather-dialog" aria-labelledby="weather-dialog-title" aria-describedby="weather-dialog-description">
+      <div class="dialog-head">
+        <div>
+          <p class="weather-eyebrow" id="weather-dialog-date">오늘의 날씨</p>
+          <h2 id="weather-dialog-title">지역별 시간대 날씨</h2>
+        </div>
+        <button class="dialog-close" id="weather-close" type="button" aria-label="날씨 창 닫기" autofocus>닫기</button>
+      </div>
+      <p class="weather-description" id="weather-dialog-description">선택한 지역의 현재 날씨와 오늘의 시간별 예보를 확인하세요.</p>
+      <div class="weather-status" id="weather-status" role="status" aria-live="polite">지도에서 지역을 선택하면 날씨를 확인할 수 있어요.</div>
+      <div id="weather-content" hidden>
+        <div class="weather-overview" id="weather-overview"></div>
+        <section class="weather-alerts" id="weather-alerts" aria-labelledby="weather-alert-title" aria-live="polite"></section>
+        <section aria-labelledby="weather-hourly-title">
+          <div class="weather-section-head">
+            <h3 id="weather-hourly-title">오늘의 시간별 날씨</h3>
+            <span>한국 표준시 · KST</span>
+          </div>
+          <div class="weather-table-wrap" tabindex="0" role="region" aria-label="시간별 날씨 표, 작은 화면에서는 옆으로 스크롤하세요">
+            <table class="weather-table">
+              <caption class="visually-hidden">선택한 지역의 오늘 시간별 기온, 하늘 상태, 강수량, 강수 확률, 습도와 풍속</caption>
+              <thead><tr><th scope="col">시간</th><th scope="col">날씨</th><th scope="col">기온</th><th scope="col">강수량</th><th scope="col">강수 확률</th><th scope="col">습도</th><th scope="col">풍속</th></tr></thead>
+              <tbody id="weather-hours"></tbody>
+            </table>
+          </div>
+          <p class="weather-hourly-note">—는 제공되지 않은 값입니다. 시간이 지난 예보는 최신 발표에 포함되지 않을 수 있어요.</p>
+        </section>
+        <div class="weather-extras" id="weather-extras" hidden></div>
+        <p class="weather-source" id="weather-source"></p>
+        <p class="weather-warning" id="weather-warning" hidden></p>
+      </div>
+      <div class="dialog-actions"><button class="soft-button" id="weather-retry" type="button" hidden>다시 확인</button></div>
     </dialog>
   </body>
 </html>

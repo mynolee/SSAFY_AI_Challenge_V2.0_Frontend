@@ -1,6 +1,9 @@
-// mypage.html의 내 정보, 저장 목록, 내가 쓴 글, 로그아웃, 회원 탈퇴를 담당합니다.
+// mypage.html의 내 정보, 저장 목록, 내가 쓴 글, 회원정보 수정, 로그아웃, 회원 탈퇴를 담당합니다.
 (function () {
-  const { KEYS, getCurrentUser, logout, readList, writeList, formatDate, verifyPassword, images } = window.Kkuni;
+  const {
+    KEYS, getCurrentUser, setCurrentUser, logout, readList, writeList, formatDate,
+    verifyPassword, createPasswordRecord, renderHeaderUser, images,
+  } = window.Kkuni;
 
   const PLACE_TYPES = {
     point: "낚시 포인트",
@@ -113,6 +116,7 @@
     const emptyText = document.getElementById("empty-text");
     const emptyLink = document.getElementById("empty-link");
     const accountInfo = document.getElementById("account-info");
+    const accountEditRow = document.getElementById("account-edit-row");
     const itemTemplate = document.getElementById("item-template");
 
     const tripDialog = document.getElementById("trip-detail-dialog");
@@ -135,6 +139,16 @@
     const withdrawPassword = document.getElementById("withdraw-password");
     const withdrawError = document.getElementById("withdraw-error");
     const withdrawSubmit = document.getElementById("withdraw-submit");
+
+    const profileDialog = document.getElementById("profile-dialog");
+    const profileForm = document.getElementById("profile-form");
+    const profileNameInput = document.getElementById("profile-name-input");
+    const profileNewPassword = document.getElementById("profile-new-password");
+    const profileNewPasswordConfirm = document.getElementById("profile-new-password-confirm");
+    const profileCurrentPassword = document.getElementById("profile-current-password");
+    const profileError = document.getElementById("profile-error");
+    const profileSubmit = document.getElementById("profile-submit");
+    let profileBusy = false;
 
     // mypage.html?tab=posts 처럼 처음 열 탭을 지정할 수 있습니다.
     const requestedTab = (/[?&]tab=([a-z]+)/.exec(window.location.search) || [])[1];
@@ -300,6 +314,7 @@
       renderItems([]);
       empty.hidden = true;
       accountInfo.hidden = true;
+      accountEditRow.hidden = true;
 
       if (activeTab === "account") {
         panelBadge.textContent = user ? "내 계정" : "미리보기";
@@ -319,6 +334,7 @@
         document.getElementById("account-created").textContent = createdAt || "확인할 수 없음";
         document.getElementById("account-posts").textContent = data ? data.posts.length + "개" : "—";
         accountInfo.hidden = false;
+        accountEditRow.hidden = false;
         return;
       }
 
@@ -655,6 +671,93 @@
       if (!window.confirm("로그아웃할까요?")) return;
       logout();
       window.location.href = "index.html";
+    });
+
+    // ---------- 회원정보 수정 ----------
+    document.getElementById("profile-edit-open").addEventListener("click", function () {
+      const user = getCurrentUser();
+      if (!user) {
+        render();
+        return;
+      }
+      profileForm.reset();
+      profileError.hidden = true;
+      document.getElementById("profile-email").textContent = user.email;
+      profileNameInput.value = user.name;
+      profileDialog.showModal();
+      profileNameInput.focus();
+    });
+
+    function closeProfile() {
+      if (!profileBusy) profileDialog.close();
+    }
+    document.getElementById("profile-close").addEventListener("click", closeProfile);
+    document.getElementById("profile-cancel").addEventListener("click", closeProfile);
+    profileDialog.addEventListener("cancel", function (event) {
+      if (profileBusy) event.preventDefault();
+    });
+
+    function showProfileError(message, field) {
+      profileError.textContent = message;
+      profileError.hidden = false;
+      if (field) field.focus();
+    }
+
+    profileForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      if (profileBusy) return;
+      const user = getCurrentUser();
+      if (!user) {
+        profileDialog.close();
+        render();
+        return;
+      }
+      const name = profileNameInput.value.trim();
+      const newPassword = profileNewPassword.value;
+      if (!name) return showProfileError("닉네임을 입력해주세요.", profileNameInput);
+      if (name.length > 20) return showProfileError("닉네임은 20자까지 입력할 수 있어요.", profileNameInput);
+      if (newPassword && newPassword.length < 8) return showProfileError("새 비밀번호는 8자 이상 입력해주세요.", profileNewPassword);
+      if (newPassword !== profileNewPasswordConfirm.value) return showProfileError("새 비밀번호가 일치하지 않습니다.", profileNewPasswordConfirm);
+      if (name === user.name && !newPassword) return showProfileError("변경할 닉네임이나 새 비밀번호를 입력해주세요.", profileNameInput);
+      if (!profileCurrentPassword.value) return showProfileError("현재 비밀번호를 입력해주세요.", profileCurrentPassword);
+
+      profileBusy = true;
+      profileSubmit.disabled = true;
+      profileSubmit.textContent = "확인 중...";
+      try {
+        const member = readList(KEYS.users).find((item) => item && item.email === user.email);
+        if (!member) throw new Error("저장된 계정 정보를 찾을 수 없습니다.");
+        if (!await verifyPassword(member, profileCurrentPassword.value)) {
+          throw new Error("현재 비밀번호가 일치하지 않습니다.");
+        }
+        const changes = { name, updatedAt: new Date().toISOString() };
+        if (newPassword) Object.assign(changes, await createPasswordRecord(newPassword));
+
+        // 해시를 만드는 동안 계정이 바뀌었을 수 있어 최신 목록을 다시 읽습니다.
+        const users = readList(KEYS.users);
+        const index = users.findIndex((item) => item && item.email === user.email);
+        if (index < 0) throw new Error("저장된 계정 정보를 찾을 수 없습니다.");
+        users[index] = Object.assign({}, users[index], changes);
+        writeList(KEYS.users, users);
+        // 내가 쓴 글의 작성자 이름도 새 닉네임으로 맞춥니다.
+        if (name !== user.name) {
+          writeList(KEYS.posts, readList(KEYS.posts).map((post) =>
+            post && post.ownerEmail === user.email ? Object.assign({}, post, { author: name }) : post));
+        }
+        setCurrentUser({ name, email: user.email });
+      } catch (error) {
+        showProfileError(error.message);
+        return;
+      } finally {
+        profileBusy = false;
+        profileSubmit.disabled = false;
+        profileSubmit.textContent = "저장하기";
+      }
+
+      profileDialog.close();
+      renderHeaderUser();
+      render();
+      alert(newPassword ? "닉네임과 비밀번호를 저장했습니다." : "닉네임을 저장했습니다.");
     });
 
     // ---------- 회원 탈퇴 ----------

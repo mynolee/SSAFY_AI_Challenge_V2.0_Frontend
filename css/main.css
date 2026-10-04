@@ -714,9 +714,10 @@ button:active { transform: scale(0.98) !important; transition-duration: 100ms !i
 .weather-hourly-note { margin: 10px 0 0; }
 .weather-source { margin: 20px 0 0; }
 .weather-warning { margin: 12px 0 0; padding: 13px 16px; border-radius: 12px; color: #7e632a; background: #fff7e8; font-size: 0.76rem; line-height: 1.75; }
-.weather-extras { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-top: 20px; }
+.weather-extras { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 10px; margin-top: 20px; }
 .weather-extras .weather-summary-card { background: #fff; }
-.weather-extras strong { font-size: 1rem; }
+/* 음력 날짜(2026-08-24)가 하이픈에서 줄바꿈되지 않게 한 줄로 표시합니다. */
+.weather-extras strong { font-size: 1rem; white-space: nowrap; }
 .weather-extra-caption { grid-column: 1 / -1; margin: 0; color: #8998ac; font-size: 0.71rem; }
 .weather-alerts { margin-bottom: 24px; padding: 18px; border: 1px solid #f4dfb8; border-radius: 16px; background: #fff8eb; }
 .weather-alerts[data-state="none"] { border-color: #dbe9f9; background: #f5f9ff; }
@@ -735,25 +736,25 @@ button:active { transform: scale(0.98) !important; transition-duration: 100ms !i
 .weather-alert-link { display: inline-block; margin-top: 14px; color: #286fd1; font-size: 0.74rem; font-weight: 700; text-decoration: none; }
 .weather-alert-link:hover { text-decoration: underline; }
 @media (max-width: 1200px) and (min-width: 1101px) {
-  .home-page .header-inner { width: calc(100% - 32px); gap: 16px; }
-  .home-page .brand-logo { width: 54px; height: 54px; }
-  .home-page .brand-name { font-size: 1.55rem; }
-  .home-page .tagline { font-size: 0.64rem; }
-  .home-page .main-nav { gap: 16px; }
-  .home-page .header-actions { gap: 12px; }
+  .site-header .header-inner { width: calc(100% - 32px); gap: 16px; }
+  .site-header .brand-logo { width: 54px; height: 54px; }
+  .site-header .brand-name { font-size: 1.55rem; }
+  .site-header .tagline { font-size: 0.64rem; }
+  .site-header .main-nav { gap: 16px; }
+  .site-header .header-actions { gap: 12px; }
 }
 @media (max-width: 1100px) {
-  .home-page .header-inner { width: 100%; flex-wrap: wrap; gap: 4px 20px; padding: 8px 20px 0; }
-  .home-page .main-nav { order: 3; width: 100%; min-height: 44px; gap: 24px; overflow-x: auto; }
-  .home-page .nav-link.active::after { bottom: 0; }
+  .site-header .header-inner { width: 100%; flex-wrap: wrap; gap: 4px 20px; padding: 8px 20px 0; }
+  .site-header .main-nav { order: 3; width: 100%; min-height: 44px; gap: 24px; overflow-x: auto; }
+  .site-header .nav-link.active::after { bottom: 0; }
 }
 @media (max-width: 640px) {
-  .home-page .header-inner { gap: 7px 12px; padding: 8px 16px 0; }
-  .home-page .header-actions { display: contents; }
-  .home-page .login-link { order: 1; margin-left: auto; }
-  .home-page .home-weather-chip { display: flex; order: 2; width: 100%; }
-  .home-page .home-weather-chip .weather-text { margin-left: auto; }
-  .home-page .main-nav { gap: 20px; }
+  .site-header .header-inner { gap: 7px 12px; padding: 8px 16px 0; }
+  .site-header .header-actions { display: contents; }
+  .site-header .login-link { order: 1; margin-left: auto; }
+  .site-header .home-weather-chip { display: flex; order: 2; width: 100%; }
+  .site-header .home-weather-chip .weather-text { margin-left: auto; }
+  .site-header .main-nav { gap: 20px; }
   .weather-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .weather-summary-card { padding: 14px 12px; }
   .weather-summary-card strong { font-size: 1.12rem; }

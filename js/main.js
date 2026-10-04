@@ -1,4 +1,4 @@
-// index.html의 지도와 지역 선택 동작을 담당합니다.
+// index.html의 지도와 지역 선택, 모든 페이지 헤더의 날짜·날씨 버튼을 담당합니다.
 (function () {
   const regionData = {
     "서울특별시": { label: "서울", copy: "동네마다 완전히 다른 표정을 가진 도시 여행의 출발점", cities: ["종로구", "중구", "용산구", "성동구", "광진구", "동대문구", "성북구", "마포구", "서대문구", "영등포구", "강남구", "송파구"] },
@@ -404,7 +404,9 @@
       if (data.extras && typeof data.extras === "object") {
         Object.entries(extraLabels).forEach(([key, label]) => {
           if (hasValue(data.extras[key]) && typeof data.extras[key] !== "object") {
-            extras.append(summaryCard(label, String(data.extras[key])));
+            // 음력의 "(윤달)" 표시는 날짜가 한 줄에 보이도록 아래 안내 줄로 옮깁니다.
+            const [value, leap] = String(data.extras[key]).split(" (윤달)");
+            extras.append(summaryCard(label, value, key === "lunarDate" && leap !== undefined ? "윤달" : ""));
           }
         });
         if (hasValue(data.extras.astronomyLocation) && extras.children.length) {
@@ -495,7 +497,8 @@
     loadWeather();
   }
 
+  // 지역 선택 지도는 홈에만 있고, 헤더의 날짜·날씨 버튼은 모든 페이지가 함께 씁니다.
   const page = document.getElementById("region-page");
-  const getSelection = initRegionSelection(page);
-  initHomeWeather(getSelection);
+  const getSelection = page ? initRegionSelection(page) : () => Kkuni.getSelectedRegion();
+  if (document.getElementById("weather-open")) initHomeWeather(getSelection);
 })();

@@ -2,6 +2,7 @@
 // 각 페이지의 JS보다 먼저 불러와 window.Kkuni로 사용합니다.
 (function () {
   const CURRENT_USER_KEY = "kkuni-current-user";
+  const PASSWORD_ITERATIONS = 600000;
   const REGION_STATE_KEY = "pado-fishing-session";
   const REGION_NAMES = new Set([
     "서울특별시", "부산광역시", "대구광역시", "인천광역시", "광주광역시", "대전광역시",
@@ -35,6 +36,15 @@
       sessionStorage.removeItem(CURRENT_USER_KEY);
     } catch (error) {
       // 세션 저장소를 쓸 수 없으면 이미 로그인 정보도 남아 있지 않습니다.
+    }
+  }
+
+  // 회원정보를 수정하면 탭 세션의 이름도 함께 바꿉니다.
+  function setCurrentUser(user) {
+    try {
+      sessionStorage.setItem(CURRENT_USER_KEY, JSON.stringify({ name: user.name, email: user.email }));
+    } catch (error) {
+      throw new Error("로그인 정보를 저장하지 못했습니다. 브라우저 저장소 설정을 확인해주세요.");
     }
   }
 
@@ -191,8 +201,8 @@
     return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
   }
 
-  // login.js와 같은 방식(PBKDF2-SHA256)으로 비밀번호를 다시 확인합니다.
-  async function verifyPassword(user, password) {
+  // login.js와 같은 방식(PBKDF2-SHA256)으로 비밀번호 해시를 만듭니다.
+  async function hashPassword(password, salt, iterations) {
     if (!window.crypto || !window.crypto.subtle) {
       throw new Error("이 브라우저에서는 비밀번호 확인 기능을 사용할 수 없습니다.");
     }
@@ -201,11 +211,21 @@
       "raw", encoder.encode(password), "PBKDF2", false, ["deriveBits"]
     );
     const bits = await crypto.subtle.deriveBits(
-      { name: "PBKDF2", hash: "SHA-256", salt: encoder.encode(user.salt), iterations: user.iterations },
+      { name: "PBKDF2", hash: "SHA-256", salt: encoder.encode(salt), iterations },
       key,
       256
     );
-    return toHex(new Uint8Array(bits)) === user.passwordHash;
+    return toHex(new Uint8Array(bits));
+  }
+
+  async function verifyPassword(user, password) {
+    return await hashPassword(password, user.salt, user.iterations) === user.passwordHash;
+  }
+
+  // 비밀번호를 바꿀 때 새 salt와 해시를 함께 만듭니다. 형식은 login.js의 회원 검증과 같습니다.
+  async function createPasswordRecord(password) {
+    const salt = toHex(crypto.getRandomValues(new Uint8Array(16)));
+    return { salt, passwordHash: await hashPassword(password, salt, PASSWORD_ITERATIONS), iterations: PASSWORD_ITERATIONS };
   }
 
   // 로그인하면 헤더의 "로그인" 버튼이 "이름님" 마이페이지 링크로 바뀝니다.
@@ -274,7 +294,8 @@
   };
 
   window.Kkuni = {
-    KEYS, getCurrentUser, logout, readList, writeList, createId, formatDate, verifyPassword, images,
+    KEYS, getCurrentUser, setCurrentUser, logout, readList, writeList, createId, formatDate,
+    verifyPassword, createPasswordRecord, renderHeaderUser, images,
     REGION_STATE_KEY, getSelectedRegion, loadKakaoMaps, resolveRegion,
   };
 

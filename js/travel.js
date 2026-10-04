@@ -488,7 +488,6 @@
       region = await K.resolveRegion(K.getSelectedRegion());
       map = new maps.Map(byId("travel-map"), { center: new maps.LatLng(region.lat, region.lng), level: 7 });
       infoWindow = new maps.InfoWindow({ zIndex: 10, removable: true });
-      byId("travel-header-region").textContent = region.label;
       maps.event.addListener(map, "click", (event) => {
         const lat = Number(event.latLng.getLat().toFixed(6)), lng = Number(event.latLng.getLng().toFixed(6));
         chooseEndpoint({ id: "pin-" + lat + "-" + lng, name: "지도에서 선택한 " + TYPES[currentTarget()], lat, lng, address: "", category: currentTarget() });
@@ -502,7 +501,6 @@
       byId("travel-map-loading").hidden = true;
       byId("travel-map-error").hidden = false;
       byId("travel-map-error-message").textContent = error.message || "카카오 지도 연결을 확인하고 다시 시도해 주세요.";
-      byId("travel-header-region").textContent = "지도 연결 확인";
       byId("travel-search-status").textContent = "지도를 연결한 뒤 위치를 선택할 수 있어요.";
     } finally { initializationPending = false; }
   }

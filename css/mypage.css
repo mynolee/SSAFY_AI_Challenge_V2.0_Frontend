@@ -207,7 +207,8 @@
 .account-info dt { color: #6b7a90; font-size: 0.82rem; }
 .account-info dd { margin: 0; overflow-wrap: anywhere; font-size: 0.88rem; font-weight: 600; }
 
-.danger-row {
+.danger-row,
+.account-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -218,6 +219,8 @@
 }
 .danger-title { margin: 0 0 4px; font-size: 0.86rem; font-weight: 700; }
 .danger-copy { margin: 0; color: #6b7a90; font-size: 0.76rem; }
+.account-row[hidden] { display: none; }
+.field-optional { color: #8290a3; font-weight: 500; }
 
 /* 탈퇴 대화상자 */
 .withdraw-lead { margin: 0 0 12px; color: #33445c; font-size: 0.88rem; line-height: 1.6; }
@@ -284,7 +287,7 @@
 @media (max-width: 640px) {
   .item-grid { grid-template-columns: 1fr; }
   .panel-card { padding: 22px 18px; }
-  .danger-row { flex-direction: column; align-items: flex-start; }
+  .danger-row, .account-row { flex-direction: column; align-items: flex-start; }
   .account-info div { grid-template-columns: 1fr; gap: 4px; }
   .trip-detail-dialog { width: calc(100vw - 24px); max-height: calc(100dvh - 24px); }
   .trip-detail-map { height: 240px; }
