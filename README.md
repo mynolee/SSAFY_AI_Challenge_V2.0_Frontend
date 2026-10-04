@@ -724,9 +724,3 @@ OPENAI_API_KEY=YOUR_OPENAI_API_KEY
 | README.md                   | 팀 정보, 필수·추가·심화 구현 현황, 기능별 작업 내용과 관련 Source                          |
 | 기능별 화면영상             | `img/gif/`의 기능별 GIF 13개 — 각 기능 절에 삽입                                           |
 | 프로젝트 압축 파일          | `SSAFY16_광주4_관통_FrontEnd_8팀_김정호_이민호.zip`                                        |
-
-압축 파일에는 실제 API 키가 들어 있는 `.env`를 넣지 않습니다. 커밋된 파일만 묶는 `git archive`를 사용하면 `.env`와 Git이 추적하지 않는 파일은 자동으로 제외됩니다. 최종 commit 후에 실행합니다.
-
-```bash
-git archive --format=zip -o "SSAFY16_광주4_관통_FrontEnd_8팀_김정호_이민호.zip" HEAD
-```
