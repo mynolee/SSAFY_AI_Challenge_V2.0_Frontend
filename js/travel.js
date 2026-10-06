@@ -6,7 +6,7 @@
   const DRAFT_KEY = "kkuni-travel-draft";
   const MODEL = "gpt-5.6-luna";
   const TYPES = { origin: "출발지", destination: "도착지", point: "낚시 포인트", lodging: "숙소", restaurant: "음식점", attraction: "명소" };
-  const ICONS = { origin: "img/icons/marker-trip.svg", destination: "img/icons/marker-point.svg", point: "img/icons/marker-point.svg", lodging: "img/icons/marker-lodging.svg", restaurant: "img/icons/marker-restaurant.svg", attraction: "img/icons/marker-trip.svg" };
+  const ICONS = { origin: "../img/icons/marker-trip.svg", destination: "../img/icons/marker-point.svg", point: "../img/icons/marker-point.svg", lodging: "../img/icons/marker-lodging.svg", restaurant: "../img/icons/marker-restaurant.svg", attraction: "../img/icons/marker-trip.svg" };
   const byId = (id) => document.getElementById(id);
   let maps, map, infoWindow, region, initializationPending = false;
   let origin = null, destination = null, endpointMarkers = [], previewMarkers = [], routeLine = null;

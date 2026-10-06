@@ -48,10 +48,10 @@
 
 | 구분      | 화면(HTML)                                                                                                                   | 기능(JS)                                                                                                                                                        |
 | --------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 회원가입  | [login.html — 회원가입 창](login.html#L157)                                                                                 | [js/login.js — `registerUser`](js/login.js#L63), [`hashPassword`](js/login.js#L47)                                                                             |
-| 회원 조회 | [mypage.html — 계정 정보](mypage.html#L142)                                                                                 | [js/mypage.js — 계정 관리 탭 렌더링](js/mypage.js#L319)                                                                                                        |
-| 회원 수정 | [mypage.html — 정보 수정 버튼](mypage.html#L149), [회원정보 수정 창](mypage.html#L217)                                      | [js/mypage.js — 회원정보 수정](js/mypage.js#L676), [js/session.js — `createPasswordRecord`](js/session.js#L226), [`setCurrentUser`](js/session.js#L43)        |
-| 회원 탈퇴 | [mypage.html — 회원 탈퇴 창](mypage.html#L249)                                                                              | [js/mypage.js — 회원 탈퇴](js/mypage.js#L763)                                                                                                                  |
+| 회원가입  | [login.html — 회원가입 창](html/login.html#L157)                                                                                 | [js/login.js — `registerUser`](js/login.js#L63), [`hashPassword`](js/login.js#L47)                                                                             |
+| 회원 조회 | [mypage.html — 계정 정보](html/mypage.html#L142)                                                                                 | [js/mypage.js — 계정 관리 탭 렌더링](js/mypage.js#L319)                                                                                                        |
+| 회원 수정 | [mypage.html — 정보 수정 버튼](html/mypage.html#L149), [회원정보 수정 창](html/mypage.html#L217)                                      | [js/mypage.js — 회원정보 수정](js/mypage.js#L676), [js/session.js — `createPasswordRecord`](js/session.js#L226), [`setCurrentUser`](js/session.js#L43)        |
+| 회원 탈퇴 | [mypage.html — 회원 탈퇴 창](html/mypage.html#L249)                                                                              | [js/mypage.js — 회원 탈퇴](js/mypage.js#L763)                                                                                                                  |
 
 **핵심 코드** — 회원정보 수정 ([js/mypage.js](js/mypage.js#L706))
 
@@ -98,10 +98,10 @@ setCurrentUser({ name, email: user.email });
 
 | 구분            | 화면(HTML)                                                                                                     | 기능(JS)                                                                                                                         |
 | --------------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| 로그인          | [login.html — 로그인 폼](login.html#L78), [데모 계정 버튼](login.html#L125)                                    | [js/login.js — `signIn`](js/login.js#L242), [`nextPage`](js/login.js#L260), [데모 로그인](js/login.js#L284)                       |
+| 로그인          | [login.html — 로그인 폼](html/login.html#L78), [데모 계정 버튼](html/login.html#L125)                                    | [js/login.js — `signIn`](js/login.js#L242), [`nextPage`](js/login.js#L260), [데모 로그인](js/login.js#L284)                       |
 | 헤더 표시       | 각 페이지 헤더의 `.login-link`                                                                                 | [js/session.js — `renderHeaderUser`](js/session.js#L232), [`getCurrentUser`](js/session.js#L24)                                  |
-| 로그아웃        | [mypage.html — 로그아웃 버튼](mypage.html#L106)                                                                | [js/mypage.js — 로그아웃](js/mypage.js#L670), [js/session.js — `logout`](js/session.js#L34)                                      |
-| 비밀번호 찾기   | [login.html — 찾기 링크](login.html#L114), [비밀번호 찾기 창](login.html#L231)                                 | [js/login.js — `resetUserPassword`](js/login.js#L86), [찾기 창 이벤트](js/login.js#L194)                                         |
+| 로그아웃        | [mypage.html — 로그아웃 버튼](html/mypage.html#L106)                                                                | [js/mypage.js — 로그아웃](js/mypage.js#L670), [js/session.js — `logout`](js/session.js#L34)                                      |
+| 비밀번호 찾기   | [login.html — 찾기 링크](html/login.html#L114), [비밀번호 찾기 창](html/login.html#L231)                                 | [js/login.js — `resetUserPassword`](js/login.js#L86), [찾기 창 이벤트](js/login.js#L194)                                         |
 | 테스트          | —                                                                                                              | [tests/login.test.cjs](tests/login.test.cjs)                                                                                     |
 
 **핵심 코드** — 비밀번호 찾기 ([js/login.js](js/login.js#L86))
@@ -139,7 +139,7 @@ async function resetUserPassword(email, name, password) {
 - 우측 상단 날씨 버튼을 누르면 선택 지역의 현재 날씨, 오늘 시간별 기온·하늘·강수·습도·풍속, 최신 전국 기상특보, 일출·일몰·월출·월몰과 음력 날짜를 보여줍니다. 음력 날짜는 좁은 화면에서도 한 줄로 표시하고, 윤달이면 날짜 아래에 따로 표시합니다.
 - **공통 헤더:** 홈·지도 탐색·여행 플래너·커뮤니티·로그인·마이페이지 6개 페이지가 같은 헤더를 사용합니다. 우측 상단에는 모든 페이지에 홈과 같은 날짜·날씨 버튼과 로그인 버튼이 같은 위치·크기로 놓이고, 어느 페이지에서든 버튼을 누르면 홈에서 선택한 지역의 날씨 창이 열립니다. 태블릿·모바일 폭의 헤더 배치도 모든 페이지에서 같습니다.
 
-**관련 Source:** [index.html — 시도 SVG](index.html#L62), [시군구 목록](index.html#L99), [날씨 버튼](index.html#L35), [날씨 창](index.html#L118) · [js/main.js — `initRegionSelection`](js/main.js#L23), [`initHomeWeather`](js/main.js#L173), [`loadWeather`](js/main.js#L435), [음력 표시](js/main.js#L408), [모든 페이지 헤더 연결](js/main.js#L502) · [css/main.css — 공통 헤더 반응형](css/main.css#L738), [음력 한 줄 표시](css/main.css#L720) · [server.cjs — `getWeather`](server.cjs#L205), [`normalizeAlertStatus`](server.cjs#L186)
+**관련 Source:** [index.html — 시도 SVG](html/index.html#L62), [시군구 목록](html/index.html#L99), [날씨 버튼](html/index.html#L35), [날씨 창](html/index.html#L118) · [js/main.js — `initRegionSelection`](js/main.js#L23), [`initHomeWeather`](js/main.js#L173), [`loadWeather`](js/main.js#L435), [음력 표시](js/main.js#L408), [모든 페이지 헤더 연결](js/main.js#L502) · [css/main.css — 공통 헤더 반응형](css/main.css#L738), [음력 한 줄 표시](css/main.css#L720) · [server.cjs — `getWeather`](server.cjs#L205), [`normalizeAlertStatus`](server.cjs#L186)
 
 ### 4. 지도 탐색 — 지역별 관광지·숙박·음식점 조회 (F101·F102)
 
@@ -155,7 +155,7 @@ async function resetUserPassword(email, name, password) {
 - **마커 대표 이미지:** 마커를 누르면 지도 정보창에 대표 사진 1장이 장소 이름·카카오맵 링크와 함께 나옵니다. 서버의 `/api/place-photo`가 한국관광공사 국문관광정보서비스에서 좌표 1km 이내이면서 이름이 같은 장소의 `firstimage`를 찾고, 없으면 이름 검색 결과 중 2km 이내의 장소를 찾습니다. `.env`에 `KAKAO_REST_API_KEY`가 있으면 관광공사에 없는 장소는 카카오 이미지 검색 첫 결과를 사용합니다. 사진이 없거나 불러오지 못하면 장소 유형별 기본 이미지를 보여주며, 사진 출처를 정보창에 표시합니다. 사용자가 등록한 마커는 비공개 이름일 수 있어 외부 조회 없이 마커 이미지를 사용합니다.
 - 한계: 장소 목록 데이터는 한국관광공사 API가 아니라 카카오 장소 검색 결과입니다(F101·F102 △, F103 ❌). 대표 사진은 관광공사에 등록되지 않은 낚시터·용품점 등에서는 기본 이미지로 표시됩니다.
 
-**관련 Source:** [map.html](map.html) · [js/map.js — 장소 유형 `CATEGORY`](js/map.js#L6), [`searchCategory`](js/map.js#L164), [관심 장소 `favoriteButton`](js/map.js#L222), [대표 이미지 `placePhoto`](js/map.js#L251), [정보창 `selectPlace`](js/map.js#L294), [`initializeMap`](js/map.js#L490) · [server.cjs — `/api/place-photo`](server.cjs#L670), [`getPlacePhoto`](server.cjs#L355), [관광공사 사진 `tourPlacePhoto`](server.cjs#L326), [이름 일치 점수 `placeNameScore`](server.cjs#L304), [카카오 이미지 검색 `kakaoImagePhoto`](server.cjs#L341) · [js/session.js — 지역 좌표 `resolveRegion`](js/session.js#L145), [`loadKakaoMaps`](js/session.js#L96)
+**관련 Source:** [map.html](html/map.html) · [js/map.js — 장소 유형 `CATEGORY`](js/map.js#L6), [`searchCategory`](js/map.js#L164), [관심 장소 `favoriteButton`](js/map.js#L222), [대표 이미지 `placePhoto`](js/map.js#L251), [정보창 `selectPlace`](js/map.js#L294), [`initializeMap`](js/map.js#L490) · [server.cjs — `/api/place-photo`](server.cjs#L670), [`getPlacePhoto`](server.cjs#L355), [관광공사 사진 `tourPlacePhoto`](server.cjs#L326), [이름 일치 점수 `placeNameScore`](server.cjs#L304), [카카오 이미지 검색 `kakaoImagePhoto`](server.cjs#L341) · [js/session.js — 지역 좌표 `resolveRegion`](js/session.js#L145), [`loadKakaoMaps`](js/session.js#L96)
 
 **핵심 코드** — 장소 유형과 검색 방식 ([js/map.js](js/map.js#L6))
 
@@ -184,7 +184,7 @@ else places.keywordSearch(category.keyword, callback, options);
 - **마커 추가**를 누르고 지도를 클릭하면 위도·경도가 입력됩니다. 이름(60자)·유형(낚시 포인트/용품점)·공개 범위·메모(300자)와 다섯 가지 마커 이미지 중 하나를 선택합니다.
 - 로그인한 사용자의 마커는 `kkuni-markers`에 저장되어 새로고침 후에도 복원되고 마이페이지 **내가 등록한 장소**에 표시됩니다. 비회원은 이번 방문 동안만 유지되는 임시 마커를 사용합니다.
 
-**관련 Source:** [map.html — 장소 등록 창](map.html#L129) · [js/map.js — `openMarkerDialog`](js/map.js#L334), [`saveMarker`](js/map.js#L357) · [js/mypage.js — 마커 삭제와 참조 정리](js/mypage.js#L88)
+**관련 Source:** [map.html — 장소 등록 창](html/map.html#L129) · [js/map.js — `openMarkerDialog`](js/map.js#L334), [`saveMarker`](js/map.js#L357) · [js/mypage.js — 마커 삭제와 참조 정리](js/mypage.js#L88)
 
 ### 6. 해양 정보 — 조석·조위·바다낚시지수
 
@@ -194,7 +194,7 @@ else places.keywordSearch(category.keyword, callback, options);
 
 **작업 내용:** 지도 중심에서 35km 이내의 조위관측소와 바다낚시 예보 지점을 골라 만조·간조 시각, 최신 조위·수온·기온·풍속, 낚시지수를 표시합니다. 기준 지점과 거리·시각·출처를 함께 보여주고, 지도를 옮긴 뒤 **물때 다시 조회**로 갱신합니다.
 
-**관련 Source:** [map.html — 해양 정보 영역](map.html#L119) · [js/map.js — `loadMarine`](js/map.js#L458) · [server.cjs — `getMarine`](server.cjs#L375), [`nearestStation`](server.cjs#L294)
+**관련 Source:** [map.html — 해양 정보 영역](html/map.html#L119) · [js/map.js — `loadMarine`](js/map.js#L458) · [server.cjs — `getMarine`](server.cjs#L375), [`nearestStation`](server.cjs#L294)
 
 ### 7. AI 여행 플래너 (F104)
 
@@ -212,7 +212,7 @@ else places.keywordSearch(category.keyword, callback, options);
 - 경로 중간 지점과 도착지 주변의 숙박·음식점·명소 후보를 카카오에서 모아 서버의 `/api/travel-plans`로 보내고, 서버가 OpenAI 응답을 검증해 서로 다른 일정 3개를 돌려줍니다.
 - 선택한 일정은 로그인 후 `kkuni-trips`에 저장하고, 마이페이지에서 일정 지도와 여행 전체 메모(10,000자)·장소별 메모(2,000자)를 관리합니다.
 
-**관련 Source:** [travel.html](travel.html) · [js/travel.js — `collectCandidates`](js/travel.js#L270), [`validatePlans`](js/travel.js#L293), [`savePlan`](js/travel.js#L333), [`generatePlans`](js/travel.js#L442) · [server.cjs — `getTravelPlans`](server.cjs#L538) · [js/mypage.js — `openTrip`](js/mypage.js#L525), [메모 저장](js/mypage.js#L579)
+**관련 Source:** [travel.html](html/travel.html) · [js/travel.js — `collectCandidates`](js/travel.js#L270), [`validatePlans`](js/travel.js#L293), [`savePlan`](js/travel.js#L333), [`generatePlans`](js/travel.js#L442) · [server.cjs — `getTravelPlans`](server.cjs#L538) · [js/mypage.js — `openTrip`](js/mypage.js#L525), [메모 저장](js/mypage.js#L579)
 
 **핵심 코드** — 실제 장소 후보로 AI 일정 요청 ([js/travel.js](js/travel.js#L457))
 
@@ -240,7 +240,7 @@ plans = validatePlans(data, request); // 요청한 날짜와 후보 ID 안의 �
 - **상세:** 사진 갤러리와 본문을 보여주고 좋아요 수를 표시합니다. `community.html?post=ID`로 바로 열 수 있습니다.
 - **수정·삭제:** 작성자에게만 버튼이 보이며, 삭제할 때 첨부 사진도 함께 지웁니다.
 
-**관련 Source:** [community.html — 글 목록](community.html#L89), [작성·수정 창](community.html#L207) · [js/community.js — `render`](js/community.js#L253), [`openDetail`](js/community.js#L328), [삭제](js/community.js#L355), [`openEditor`](js/community.js#L494), [저장(등록·수정)](js/community.js#L570), [사진 변환 `resizeImage`](js/community.js#L95)
+**관련 Source:** [community.html — 글 목록](html/community.html#L89), [작성·수정 창](html/community.html#L207) · [js/community.js — `render`](js/community.js#L253), [`openDetail`](js/community.js#L328), [삭제](js/community.js#L355), [`openEditor`](js/community.js#L494), [저장(등록·수정)](js/community.js#L570), [사진 변환 `resizeImage`](js/community.js#L95)
 
 **핵심 코드** — 등록과 수정 ([js/community.js](js/community.js#L602))
 
@@ -268,7 +268,7 @@ writeList(KEYS.posts, posts);
 
 **작업 내용:** 로그인한 사용자의 이메일로 관심 장소·등록 장소·저장 여행·내가 쓴 글을 모아 탭별로 보여주고 삭제·수정 링크를 제공합니다. 등록 장소를 지우면 모든 사용자의 관심 장소와 여행 일정에서 같은 장소를 제거합니다. 로그인 전에는 가상 예시로 화면 구성을 보여줍니다. `mypage.html?tab=favorites|markers|trips|posts|account`로 처음 열 탭을 정할 수 있습니다.
 
-**관련 Source:** [mypage.html](mypage.html) · [js/mypage.js — `userData`](js/mypage.js#L160), [`itemsFor`](js/mypage.js#L170), [`render`](js/mypage.js#L278), [`removeMarkerReferences`](js/mypage.js#L88)
+**관련 Source:** [mypage.html](html/mypage.html) · [js/mypage.js — `userData`](js/mypage.js#L160), [`itemsFor`](js/mypage.js#L170), [`render`](js/mypage.js#L278), [`removeMarkerReferences`](js/mypage.js#L88)
 
 ## 페이지 구성
 
@@ -297,7 +297,7 @@ writeList(KEYS.posts, posts);
 node server.cjs
 ```
 
-접속 주소는 서버 시작 로그를 따릅니다. `.env`에 `PORT=5500`을 설정하면 `http://127.0.0.1:5500`에서 홈을, `/map.html`에서 지도를 확인할 수 있습니다. `PORT`를 지정하지 않으면 코드의 기본 포트는 **4173**입니다. 서버는 같은 폴더의 `.env`를 자동으로 읽습니다. `KAKAO_MAP_KEY`는 카카오맵 JavaScript 키, `DATA_GO_KR_KEY`는 공공데이터 API의 공통 인증키입니다. `.env`에는 각 API의 기본 엔드포인트와 서버 `PORT`도 저장합니다. 기존 개발 환경은 `http://127.0.0.1:5500`을 사용했습니다. 카카오 콘솔의 현재 허용 주소는 실행 전에 확인해야 합니다. 다른 호스트나 포트를 사용하려면 카카오 개발자 콘솔에도 해당 웹사이트 주소를 등록해야 합니다. 공공데이터 인증키는 서버에서 사용하고, 브라우저에는 카카오맵 SDK에 필요한 키만 전달합니다. `.env`를 변경하면 서버를 다시 실행합니다. `.env`는 Git 추적에서 제외됩니다.
+접속 주소는 서버 시작 로그를 따릅니다. `.env`에 `PORT=5500`을 설정하면 `http://127.0.0.1:5500`(자동으로 `/html/index.html`로 이동)에서 홈을, `/html/map.html`에서 지도를 확인할 수 있습니다. `PORT`를 지정하지 않으면 코드의 기본 포트는 **4173**입니다. 서버는 같은 폴더의 `.env`를 자동으로 읽습니다. `KAKAO_MAP_KEY`는 카카오맵 JavaScript 키, `DATA_GO_KR_KEY`는 공공데이터 API의 공통 인증키입니다. `.env`에는 각 API의 기본 엔드포인트와 서버 `PORT`도 저장합니다. 기존 개발 환경은 `http://127.0.0.1:5500`을 사용했습니다. 카카오 콘솔의 현재 허용 주소는 실행 전에 확인해야 합니다. 다른 호스트나 포트를 사용하려면 카카오 개발자 콘솔에도 해당 웹사이트 주소를 등록해야 합니다. 공공데이터 인증키는 서버에서 사용하고, 브라우저에는 카카오맵 SDK에 필요한 키만 전달합니다. `.env`를 변경하면 서버를 다시 실행합니다. `.env`는 Git 추적에서 제외됩니다.
 
 ## 날짜·날씨와 지도 탐색
 
@@ -319,7 +319,7 @@ node server.cjs
 
 ## 로컬 회원 저장
 
-회원가입하면 `localStorage`의 `kkuni-users` 키에 회원 배열을 JSON 문자열로 저장합니다. 계정은 새로고침 후에도 유지되며, 로그인 시 저장된 목록을 다시 읽습니다. 선택한 저장 방식은 브라우저 저장소이므로 `json/user.json` 파일에는 쓰지 않습니다.
+회원가입하면 `localStorage`의 `kkuni-users` 키에 회원 배열을 JSON 문자열로 저장합니다. 계정은 새로고침 후에도 유지되며, 로그인 시 저장된 목록을 다시 읽습니다. 선택한 저장 방식은 브라우저 저장소이므로 별도 JSON 파일에는 쓰지 않습니다.
 
 회원 정보는 `name`, `email`, `salt`, `passwordHash`, `iterations`, `createdAt`으로 구성되며, 회원정보 수정이나 비밀번호 찾기로 바뀐 계정에는 `updatedAt`이 추가됩니다. 비밀번호 원문은 저장하지 않고 사용자별 salt와 PBKDF2 해시를 보관합니다. 비밀번호를 바꿀 때마다 salt도 새로 만듭니다. 로그인한 사용자의 이름과 이메일은 `sessionStorage`의 `kkuni-current-user` 키에 저장합니다.
 
@@ -586,12 +586,13 @@ flowchart TD
 ├── README.md                 # 팀 정보, 요구사항 구현 현황, 기능별 구현 내용과 실행·데이터 명세
 ├── requirements.md           # 요구사항 문서
 ├── server.cjs                # 정적 파일 제공, 환경변수, 공공 API·장소 사진 및 AI 프록시
-├── index.html                # 지역 선택 홈과 날씨 창
-├── map.html                  # 지도 탐색, 마커 등록, 해양 정보
-├── travel.html               # AI 여행 플래너
-├── community.html            # 게시글 목록·상세·작성·편집
-├── login.html                # 로그인, 회원가입, 비밀번호 찾기
-├── mypage.html               # 내 데이터, 여행 메모, 계정 관리(회원정보 수정·탈퇴)
+├── html/
+│   ├── index.html            # 지역 선택 홈과 날씨 창
+│   ├── map.html              # 지도 탐색, 마커 등록, 해양 정보
+│   ├── travel.html           # AI 여행 플래너
+│   ├── community.html        # 게시글 목록·상세·작성·편집
+│   ├── login.html            # 로그인, 회원가입, 비밀번호 찾기
+│   └── mypage.html           # 내 데이터, 여행 메모, 계정 관리(회원정보 수정·탈퇴)
 ├── js/
 │   ├── session.js            # 공통 저장소·세션·비밀번호 해시·이미지 DB·지도 SDK·지역 좌표 처리
 │   ├── main.js               # 홈 지역 SVG 선택과 모든 페이지 헤더의 날짜·날씨 UI
@@ -611,8 +612,6 @@ flowchart TD
 │   ├── gif/                  # 기능별 시연 화면영상 GIF 13개 (README에 삽입)
 │   ├── icons/                # 브랜드 이미지와 유형별 SVG 마커
 │   └── reference_layout/     # 화면 디자인 참고 이미지
-├── json/
-│   └── user.json             # 기존 JSON 파일. 현재 회원 저장 대상은 아님
 ├── tests/
 │   └── login.test.cjs        # 로그인·회원가입·비밀번호 찾기 저장 경계 테스트
 ├── .gitignore                # 환경변수 파일 등 Git 제외 규칙
@@ -680,7 +679,7 @@ OPENAI_API_KEY=YOUR_OPENAI_API_KEY
 
 ### 6. 새로고침 또는 주소 변경 후 내 데이터가 보이지 않음
 
-- **증상:** 다른 브라우저·호스트·포트로 실행하면 기존 계정과 저장 여행이 보이지 않을 수 있고, 회원가입 후 `json/user.json`이 바뀌지 않습니다.
+- **증상:** 다른 브라우저·호스트·포트로 실행하면 기존 계정과 저장 여행이 보이지 않을 수 있고, 회원가입 후 서버의 파일이 바뀌지 않습니다.
 - **원인:** 현재 저장 방식은 브라우저의 출처별 localStorage·IndexedDB이며 파일 또는 중앙 DB에 저장하지 않습니다. 로그인 상태·지역·추천 초안은 sessionStorage를 사용합니다.
 - **해결:** 같은 브라우저와 같은 주소로 실행하고 개발자 도구의 저장소를 확인합니다. 브라우저 간 공유가 필요하면 별도의 서버 계정·DB 구현이 필요합니다.
 - **확인 결과:** 현재 코드의 저장소 키와 로그인 테스트에서 계정 저장 후 재접속 로그인 동작을 확인할 수 있습니다. 로컬 계정 검증은 실제 서비스의 서버 인증을 대신하지 않습니다.

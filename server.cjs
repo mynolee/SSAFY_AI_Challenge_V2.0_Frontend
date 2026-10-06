@@ -676,7 +676,8 @@ async function handler(req, res) {
     return;
   }
   if (relative.startsWith("/api/")) { json(res, 404, { message: "요청한 API가 없습니다." }); return; }
-  const file = path.resolve(root, "." + (relative === "/" ? "/index.html" : relative));
+  if (relative === "/") { res.writeHead(302, { Location: "/html/index.html" }).end(); return; }
+  const file = path.resolve(root, "." + relative);
   const extension = path.extname(file);
   if (!file.startsWith(root + path.sep) || !types[extension] || relative.includes("/.")) { res.writeHead(403).end(); return; }
   fs.readFile(file, (error, bytes) => {

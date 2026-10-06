@@ -5,7 +5,7 @@ const vm = require("node:vm");
 const { webcrypto } = require("node:crypto");
 
 const source = fs.readFileSync("js/login.js", "utf8");
-const html = fs.readFileSync("login.html", "utf8");
+const html = fs.readFileSync("html/login.html", "utf8");
 
 // 브라우저 대신 DOM 이벤트와 저장소 경계만 재현합니다. 암호 처리는 실제 Web Crypto를 사용합니다.
 function storage() {

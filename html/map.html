@@ -11,18 +11,18 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/main.css" />
-    <link rel="stylesheet" href="css/map.css" />
-    <script src="js/session.js" defer></script>
-    <script src="js/main.js" defer></script>
-    <script src="js/map.js" defer></script>
+    <link rel="stylesheet" href="../css/main.css" />
+    <link rel="stylesheet" href="../css/map.css" />
+    <script src="../js/session.js" defer></script>
+    <script src="../js/main.js" defer></script>
+    <script src="../js/map.js" defer></script>
   </head>
   <body>
     <div id="app">
       <header class="site-header">
         <div class="header-inner">
           <a class="brand" href="index.html" aria-label="낚시꾸니 지역 선택 홈">
-            <img class="brand-logo" src="img/icons/03-낚시꾸니.png" alt="" />
+            <img class="brand-logo" src="../img/icons/03-낚시꾸니.png" alt="" />
             <span class="header-title">
               <span class="brand-name">낚시꾸니</span>
               <span class="tagline">낚시의 모든 것, 여행의 새로운 시작</span>
@@ -134,7 +134,7 @@
         <div class="marker-form-row"><label class="marker-field">장소 종류<select id="marker-category" name="category"><option value="point">낚시 포인트</option><option value="store">낚시용품점</option></select></label><label class="marker-field">공개 설정<select id="marker-visibility" name="visibility"><option value="private">나만 보기</option><option value="public">공개 (이 브라우저)</option></select></label></div>
         <div class="marker-form-row"><label class="marker-field">위도<input id="marker-lat" name="lat" type="number" min="-90" max="90" step="any" required /></label><label class="marker-field">경도<input id="marker-lng" name="lng" type="number" min="-180" max="180" step="any" required /></label></div>
         <label class="marker-field">장소 메모<textarea id="marker-desc" name="desc" rows="2" maxlength="300" placeholder="접근 방법이나 기억할 내용을 남겨보세요."></textarea></label>
-        <fieldset class="marker-image-choices"><legend>마커 이미지 선택</legend><label><input type="radio" name="icon" value="point" checked /><img src="img/icons/marker-point.svg" alt="파란 물고기 마커" /><span>물고기</span></label><label><input type="radio" name="icon" value="store" /><img src="img/icons/marker-store.svg" alt="주황 낚시용품 마커" /><span>낚시용품</span></label><label><input type="radio" name="icon" value="trip" /><img src="img/icons/marker-trip.svg" alt="초록 여행 마커" /><span>여행</span></label><label><input type="radio" name="icon" value="lodging" /><img src="img/icons/marker-lodging.svg" alt="청록 숙소 마커" /><span>숙소</span></label><label><input type="radio" name="icon" value="restaurant" /><img src="img/icons/marker-restaurant.svg" alt="주황 음식점 마커" /><span>음식점</span></label></fieldset>
+        <fieldset class="marker-image-choices"><legend>마커 이미지 선택</legend><label><input type="radio" name="icon" value="point" checked /><img src="../img/icons/marker-point.svg" alt="파란 물고기 마커" /><span>물고기</span></label><label><input type="radio" name="icon" value="store" /><img src="../img/icons/marker-store.svg" alt="주황 낚시용품 마커" /><span>낚시용품</span></label><label><input type="radio" name="icon" value="trip" /><img src="../img/icons/marker-trip.svg" alt="초록 여행 마커" /><span>여행</span></label><label><input type="radio" name="icon" value="lodging" /><img src="../img/icons/marker-lodging.svg" alt="청록 숙소 마커" /><span>숙소</span></label><label><input type="radio" name="icon" value="restaurant" /><img src="../img/icons/marker-restaurant.svg" alt="주황 음식점 마커" /><span>음식점</span></label></fieldset>
         <p id="marker-form-error" class="map-form-error" role="alert" hidden></p>
         <div class="marker-dialog-footer"><button type="button" class="map-button map-button-light" id="marker-cancel">취소</button><button type="submit" class="map-button map-button-primary" id="marker-submit">마커 저장</button></div>
       </form>

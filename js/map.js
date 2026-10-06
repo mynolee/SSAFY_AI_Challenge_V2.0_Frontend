@@ -10,7 +10,7 @@
     restaurant: { label: "음식점", code: "FD6", icon: "restaurant" },
     lodging: { label: "숙박", code: "AD5", icon: "lodging" },
   };
-  const ICONS = { point: "img/icons/marker-point.svg", store: "img/icons/marker-store.svg", trip: "img/icons/marker-trip.svg", lodging: "img/icons/marker-lodging.svg", restaurant: "img/icons/marker-restaurant.svg" };
+  const ICONS = { point: "../img/icons/marker-point.svg", store: "../img/icons/marker-store.svg", trip: "../img/icons/marker-trip.svg", lodging: "../img/icons/marker-lodging.svg", restaurant: "../img/icons/marker-restaurant.svg" };
   const byId = (id) => document.getElementById(id);
   const controls = ["add-marker", "add-marker-coordinates", "map-recenter", "map-refresh", "marine-refresh"];
   const filters = Array.from(document.querySelectorAll('input[name="map-category"]'));

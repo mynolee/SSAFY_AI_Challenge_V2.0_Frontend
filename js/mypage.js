@@ -443,7 +443,7 @@
           const head = node("div", "trip-place-head");
           const icon = node("img", "trip-place-icon");
           const imageType = tripMarkerType(category);
-          icon.src = "img/icons/marker-" + imageType + ".svg";
+          icon.src = "../img/icons/marker-" + imageType + ".svg";
           icon.alt = "";
           const heading = node("div", "trip-place-heading");
           heading.append(node("span", "trip-place-category", tripPlaceLabel(category)), node("h4", "", `${placeIndex + 1}. ${name}`));
@@ -506,7 +506,7 @@
           if (seen.has(positionKey)) return;
           seen.add(positionKey);
           const category = tripMarkerType(place.category);
-          const image = new maps.MarkerImage("img/icons/marker-" + category + ".svg", new maps.Size(44, 56), { offset: new maps.Point(22, 53) });
+          const image = new maps.MarkerImage("../img/icons/marker-" + category + ".svg", new maps.Size(44, 56), { offset: new maps.Point(22, 53) });
           const marker = new maps.Marker({ map, position, image, title: text(place.name, "여행 장소") });
           detailMapObjects.push(marker);
           maps.event.addListener(marker, "click", () => {
